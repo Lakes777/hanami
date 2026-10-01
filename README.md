@@ -26,7 +26,7 @@ API REST em Python com **FastAPI** para organizar sua lista de animes: o que voc
 - **Funciona no celular:** o layout se adapta a telas pequenas.
 
 <p align="center">
-  <img src="docs/celular.jpg" alt="Lista de Animes numa tela de celular: o quadro do Frieren com a 1ª e a 2ª temporada, o campo do episódio e o botão de comentários" width="260">
+  <img src="docs/celular.jpg" alt="Lista de Animes numa tela de celular: as abas Minha lista e Adicionar, as estatísticas, os filtros de status e o quadro do Frieren com a 1ª e a 2ª temporada, o campo do episódio e o botão de comentários" width="260">
 </p>
 
 ## Rotas da API

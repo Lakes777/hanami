@@ -523,6 +523,7 @@ body {
 
 .cartao__acoes {
   display: flex;
+  flex-wrap: wrap; /* cartão estreito: a lixeira desce em vez de espremer o botão */
   align-items: center;
   justify-content: space-between;
   gap: 8px;
@@ -568,6 +569,10 @@ body {
 
 /* O botão nunca quebra em "+1" / "ep." nos cartões estreitos (dentro das franquias) */
 .episodios .botao {
+  white-space: nowrap;
+}
+
+.cartao__acoes .botao {
   white-space: nowrap;
 }
 
