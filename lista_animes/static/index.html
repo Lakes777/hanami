@@ -45,11 +45,11 @@
         <div class="filtros">
           <div class="abas" id="abas" role="tablist">
             <span class="abas__pilula" id="abas-pilula" aria-hidden="true"></span>
-            <button class="aba aba--ativa" data-status="" role="tab">Todos</button>
-            <button class="aba" data-status="assistindo" role="tab">Assistindo</button>
-            <button class="aba" data-status="quero_ver" role="tab">Quero ver</button>
-            <button class="aba" data-status="concluido" role="tab">Concluídos</button>
-            <button class="aba" data-status="abandonado" role="tab">Abandonados</button>
+            <button class="aba aba--ativa" data-status="" role="tab" aria-selected="true">Todos</button>
+            <button class="aba" data-status="assistindo" role="tab" aria-selected="false">Assistindo</button>
+            <button class="aba" data-status="quero_ver" role="tab" aria-selected="false">Quero ver</button>
+            <button class="aba" data-status="concluido" role="tab" aria-selected="false">Concluídos</button>
+            <button class="aba" data-status="abandonado" role="tab" aria-selected="false">Abandonados</button>
           </div>
           <input class="campo campo--pequeno" id="filtro-titulo" type="search"
                  placeholder="Filtrar por título" maxlength="100" aria-label="Filtrar por título">

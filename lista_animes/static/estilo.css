@@ -407,12 +407,25 @@ body {
     box-shadow 0.35s;
 }
 
-/* O cartão salta ao passar o mouse (ou com o foco dentro dele), como no portfólio */
-.cartao:hover,
+/* O cartão salta com o foco dentro dele (teclado) e, em quem tem mouse, ao passar o
+   mouse (no celular o toque deixaria o cartão "preso" levantado) */
 .cartao:focus-within {
   transform: translateY(-4px);
   border-color: #3a3d44;
   box-shadow: 0 18px 40px rgb(0 0 0 / 0.35);
+}
+
+@media (hover: hover) {
+  .cartao:hover {
+    transform: translateY(-4px);
+    border-color: #3a3d44;
+    box-shadow: 0 18px 40px rgb(0 0 0 / 0.35);
+  }
+
+  /* E a capa chega um pouco mais perto */
+  .cartao:hover .cartao__capa {
+    transform: scale(1.04);
+  }
 }
 
 /* A moldura arredonda e recorta a capa (o cartão não pode ter overflow: hidden,
@@ -431,10 +444,6 @@ body {
   transition: transform 0.6s var(--ease-out);
 }
 
-/* E a capa chega um pouco mais perto */
-.cartao:hover .cartao__capa {
-  transform: scale(1.04);
-}
 
 .cartao__corpo {
   display: flex;
@@ -446,6 +455,7 @@ body {
 
 .cartao__titulo {
   margin: 0;
+  overflow-wrap: anywhere; /* título sem espaços não vaza para o cartão vizinho */
   font-size: 1rem;
   line-height: 1.3;
 }

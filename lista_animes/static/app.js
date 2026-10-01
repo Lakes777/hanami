@@ -562,7 +562,9 @@ function moverPilulas() {
 }
 
 function mostrarAba(focar) {
-  const id = decodeURIComponent(location.hash.slice(1));
+  // Os ids das abas são simples (sem acento nem espaço): o hash é comparado como veio,
+  // sem decodeURIComponent, que quebraria a página com um endereço como "#%".
+  const id = location.hash.slice(1);
   const atual = telas.find((tela) => tela.id === id) ?? telas[0];
 
   linksMenu.forEach((link) => {
@@ -588,7 +590,7 @@ function mostrarAba(focar) {
     atual.classList.remove("aba-tela--entrando");
     void atual.offsetWidth; // força o navegador a reiniciar a animação
     atual.classList.add("aba-tela--entrando", "animar-barras");
-    setTimeout(() => atual.classList.remove("animar-barras"), 1200);
+    setTimeout(() => atual.classList.remove("animar-barras"), 1400); // 0,5 s de espera + 0,8 s
     // A pílula dos filtros só pode ser medida com a aba visível.
     moverPilula($("#abas-pilula"), $(".aba--ativa"));
     window.scrollTo({ top: 0, behavior: "instant" });

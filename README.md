@@ -19,6 +19,7 @@ API REST em Python com **FastAPI** para organizar sua lista de animes: o que voc
 - **Escolher o episódio:** digite o número (ou use as setinhas), ou clique em **+1 ep.**. Ao começar, o anime passa para "assistindo". No último episódio, vira "concluído".
 - **Temporadas juntas:** no MyAnimeList, cada temporada é um anime separado. Ao adicionar, a API vê na Jikan qual é a temporada anterior e a seguinte, e as temporadas da mesma franquia ficam num quadro só ("Temporada 1", "Temporada 2", "Filme"...). O botão **Outras temporadas** mostra as que faltam e adiciona com um clique.
 - **Comentários:** cada anime tem um histórico de anotações com data, e cada uma pode dizer o episódio ("ep. 7: que luta!").
+- **Duas abas:** **Minha lista** e **Adicionar**, cada uma com endereço próprio (`/#adicionar`), com as mesmas animações do [portfólio](https://lakes777.github.io).
 - **Filtros:** abas por status e busca por parte do título.
 - **Estatísticas:** total de animes, quantos por status, episódios assistidos e nota média.
 - **Documentação automática:** todas as rotas podem ser testadas no navegador em `/docs`.
