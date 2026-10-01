@@ -5,10 +5,13 @@ e os comentários de cada anime.
 /catalogo: busca no catálogo da Jikan (MyAnimeList).
 """
 
+from datetime import datetime, timezone
+
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
+from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 
-from lista_animes.banco import AnimeRepetido, Banco, EpisodioInvalido
+from lista_animes.banco import AnimeRepetido, Banco, EpisodioInvalido, LimiteExcedido
 from lista_animes.catalogo import Catalogo, CatalogoIndisponivel
 from lista_animes.modelos import (
     Anime,
@@ -18,7 +21,9 @@ from lista_animes.modelos import (
     Comentario,
     ComentarioNovo,
     Estatisticas,
+    ListaExportada,
     Relacionado,
+    ResultadoImportacao,
     Status,
 )
 
@@ -178,6 +183,38 @@ def adicionar_do_catalogo(
 
 # Esta rota precisa vir antes de /{anime_id}: as rotas são testadas na ordem,
 # e "estatisticas" seria lido como um id (e recusado por não ser número).
+# As duas rotas ficam antes de /{anime_id}: senão "exportar" seria lido como um id.
+@roteador.get("/exportar", response_model=ListaExportada)
+def exportar(banco: Banco = Depends(pegar_banco)) -> JSONResponse:
+    """Baixa a lista inteira (com comentários e temporadas) num arquivo JSON de backup."""
+    agora = datetime.now(timezone.utc)
+    lista = ListaExportada(formato="lista-animes", exportado_em=agora, animes=banco.exportar())
+    nome = f"lista-animes-{agora:%Y-%m-%d}.json"
+    return JSONResponse(
+        lista.model_dump(mode="json"),
+        # "attachment" faz o navegador baixar o arquivo em vez de mostrar o JSON na tela.
+        headers={"Content-Disposition": f'attachment; filename="{nome}"'},
+    )
+
+
+@roteador.post("/importar", responses={403: {"description": "Limite da demonstração"}})
+def importar(
+    lista: ListaExportada,
+    banco: Banco = Depends(pegar_banco),
+    limite: int | None = Depends(pegar_limite),
+    limite_comentarios: int | None = Depends(pegar_limite_comentarios),
+) -> ResultadoImportacao:
+    """Junta à lista os animes de um arquivo de backup (feito pelo /animes/exportar).
+
+    Animes que já estão na lista ficam como estão; os novos entram com os comentários
+    e nas franquias certas. Se der algum problema, nada é importado.
+    """
+    try:
+        return banco.importar(lista.animes, limite, limite_comentarios)
+    except LimiteExcedido as erro:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, str(erro)) from erro
+
+
 @roteador.get("/estatisticas")
 def estatisticas(banco: Banco = Depends(pegar_banco)) -> Estatisticas:
     """Resumo da lista: quantos animes por status, episódios assistidos e nota média."""

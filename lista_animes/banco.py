@@ -15,10 +15,13 @@ from pathlib import Path
 from lista_animes.modelos import (
     Anime,
     AnimeAtualizacao,
+    AnimeExportado,
     AnimeNovo,
     Comentario,
+    ComentarioExportado,
     ComentarioNovo,
     Estatisticas,
+    ResultadoImportacao,
     Status,
 )
 
@@ -88,6 +91,10 @@ class AnimeRepetido(Exception):
 
 class EpisodioInvalido(Exception):
     """O comentário cita um episódio que o anime não tem."""
+
+
+class LimiteExcedido(Exception):
+    """A importação passaria do limite de animes ou de comentários (demonstração online)."""
 
 
 class Banco:
@@ -302,3 +309,111 @@ class Banco:
     def contar_comentarios(self) -> int:
         with self._conectar() as conexao:
             return conexao.execute("SELECT COUNT(*) FROM comentarios").fetchone()[0]
+
+    def exportar(self) -> list[AnimeExportado]:
+        """A lista inteira, na ordem da tela, com os comentários de cada anime."""
+        animes = self.listar()
+        with self._conectar() as conexao:
+            linhas = conexao.execute(
+                "SELECT anime_id, texto, episodio, criado_em FROM comentarios ORDER BY id"
+            ).fetchall()
+        por_anime: dict[int, list[ComentarioExportado]] = {}
+        for linha in linhas:
+            por_anime.setdefault(linha["anime_id"], []).append(
+                ComentarioExportado(
+                    texto=linha["texto"], episodio=linha["episodio"], criado_em=linha["criado_em"]
+                )
+            )
+        return [
+            AnimeExportado(
+                **anime.model_dump(exclude={"id", "comentarios"}),
+                comentarios=por_anime.get(anime.id, []),
+            )
+            for anime in animes
+        ]
+
+    def importar(
+        self,
+        animes: list[AnimeExportado],
+        limite_animes: int | None = None,
+        limite_comentarios: int | None = None,
+    ) -> ResultadoImportacao:
+        """Junta à lista os animes do arquivo que ainda não estão nela (pelo mal_id ou, sem ele,
+        pelo título), com os comentários e as franquias. O que já está na lista fica como está.
+
+        Tudo numa transação: se passar do limite, nada é importado.
+        """
+        importados = repetidos = comentarios = 0
+        with self._conectar() as conexao:
+            franquia_do_mal_id = dict(
+                conexao.execute(
+                    "SELECT mal_id, franquia FROM animes WHERE mal_id IS NOT NULL"
+                ).fetchall()
+            )
+            titulos_sem_mal_id = {
+                linha[0].casefold()
+                for linha in conexao.execute("SELECT titulo FROM animes WHERE mal_id IS NULL")
+            }
+            # Franquia do arquivo -> franquia no banco. Se uma temporada já está na lista,
+            # as outras da mesma franquia entram junto dela.
+            franquias: dict[int, int] = {}
+            for anime in animes:
+                if anime.mal_id in franquia_do_mal_id:
+                    franquias.setdefault(anime.franquia, franquia_do_mal_id[anime.mal_id])
+
+            for anime in animes:
+                if anime.mal_id is not None:
+                    repetido = anime.mal_id in franquia_do_mal_id
+                else:
+                    repetido = anime.titulo.casefold() in titulos_sem_mal_id
+                if repetido:
+                    repetidos += 1
+                    continue
+                dados = anime.model_dump(mode="json", exclude={"comentarios"})
+                dados["franquia"] = franquias.get(anime.franquia)
+                colunas = ", ".join(dados)
+                marcadores = ", ".join(f":{coluna}" for coluna in dados)
+                anime_id = conexao.execute(
+                    f"INSERT INTO animes ({colunas}) VALUES ({marcadores})", dados
+                ).lastrowid
+                if dados["franquia"] is None:
+                    # Primeiro anime da franquia: ela ganha o número dele, como no adicionar().
+                    franquias[anime.franquia] = anime_id
+                    conexao.execute(
+                        "UPDATE animes SET franquia = ? WHERE id = ?", (anime_id, anime_id)
+                    )
+                # O mesmo anime duas vezes no arquivo entra uma vez só.
+                if anime.mal_id is not None:
+                    franquia_do_mal_id[anime.mal_id] = franquias[anime.franquia]
+                else:
+                    titulos_sem_mal_id.add(anime.titulo.casefold())
+                for comentario in anime.comentarios:
+                    conexao.execute(
+                        "INSERT INTO comentarios (anime_id, texto, episodio, criado_em) "
+                        "VALUES (?, ?, ?, ?)",
+                        (
+                            anime_id,
+                            comentario.texto,
+                            comentario.episodio,
+                            comentario.criado_em.isoformat(timespec="seconds"),
+                        ),
+                    )
+                importados += 1
+                comentarios += len(anime.comentarios)
+
+            total_animes = conexao.execute("SELECT COUNT(*) FROM animes").fetchone()[0]
+            total_comentarios = conexao.execute("SELECT COUNT(*) FROM comentarios").fetchone()[0]
+            # A exceção sai de dentro do "with": a transação é desfeita e nada fica salvo.
+            if limite_animes is not None and total_animes > limite_animes:
+                raise LimiteExcedido(
+                    f"A demonstração aceita até {limite_animes} animes; "
+                    f"com este arquivo seriam {total_animes}."
+                )
+            if limite_comentarios is not None and total_comentarios > limite_comentarios:
+                raise LimiteExcedido(
+                    f"A demonstração aceita até {limite_comentarios} comentários; "
+                    f"com este arquivo seriam {total_comentarios}."
+                )
+        return ResultadoImportacao(
+            importados=importados, repetidos=repetidos, comentarios=comentarios
+        )

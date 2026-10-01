@@ -85,6 +85,22 @@
         <p class="aviso" id="aviso-catalogo" hidden></p>
         <div class="grade" id="resultados-catalogo"></div>
       </div>
+
+      <!-- Backup: baixa a lista num arquivo JSON e junta um arquivo desses de volta -->
+      <section class="backup reveal" aria-labelledby="titulo-backup" data-grupo="2">
+        <h3 class="backup__titulo" id="titulo-backup">Backup da lista</h3>
+        <p class="backup__texto">
+          Baixe a lista inteira (com comentários e temporadas) num arquivo, para guardar ou levar
+          para outro computador. Ao importar, os animes que já estão na lista ficam como estão.
+        </p>
+        <div class="backup__botoes">
+          <a class="botao botao--pequeno botao--fantasma" href="/animes/exportar" download>Baixar backup (.json)</a>
+          <label class="botao botao--pequeno botao--fantasma arquivo">
+            Importar backup
+            <input type="file" id="arquivo-backup" accept=".json,application/json" class="invisivel">
+          </label>
+        </div>
+      </section>
     </section>
   </main>
 

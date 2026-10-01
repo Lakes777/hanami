@@ -22,6 +22,7 @@ API REST em Python com **FastAPI** para organizar sua lista de animes: o que voc
 - **Duas abas:** **Minha lista** e **Adicionar**, cada uma com endereço próprio (`/#adicionar`), com as mesmas animações do [portfólio](https://lakes777.github.io).
 - **Filtros e ordem:** abas por status, busca por parte do título e ordem (adicionados por último ou primeiro, título ou maior nota), sem separar as temporadas da mesma franquia. A ordem escolhida fica guardada no navegador.
 - **Sinopse e gêneros:** clicar na capa mostra a sinopse, os gêneros e a nota do MyAnimeList, com link para a página do anime.
+- **Backup:** na aba **Adicionar**, baixe a lista inteira num arquivo JSON (com comentários e temporadas) e importe de volta, aqui ou em outro computador. Ao importar, nada duplica: os animes que já estão na lista ficam como estão, e se algo der errado nada é importado.
 - **Estatísticas:** total de animes, quantos por status, episódios assistidos e nota média.
 - **Documentação automática:** todas as rotas podem ser testadas no navegador em `/docs`.
 - **Funciona no celular:** o layout se adapta a telas pequenas.
@@ -45,6 +46,8 @@ API REST em Python com **FastAPI** para organizar sua lista de animes: o que voc
 | `POST` | `/animes/{id}/comentarios` | Escreve um comentário (episódio opcional) |
 | `DELETE` | `/animes/{id}/comentarios/{comentario_id}` | Apaga um comentário |
 | `GET` | `/animes/estatisticas` | Resumo da lista |
+| `GET` | `/animes/exportar` | Baixa a lista inteira (com comentários e temporadas) num arquivo JSON |
+| `POST` | `/animes/importar` | Junta à lista os animes de um backup; os que já estão nela ficam como estão |
 | `GET` | `/catalogo/busca?q=frieren` | Procura animes no MyAnimeList |
 | `GET` | `/catalogo/{mal_id}` | Detalhes de um anime: sinopse, gêneros, ano, nota no MAL |
 | `GET` | `/saude` | Diz se a API está no ar |
@@ -96,7 +99,7 @@ pip install -r requirements-dev.txt
 pytest
 ```
 
-São 146 testes cobrindo as validações, o banco de dados, as rotas, o catálogo, as temporadas, os comentários e os arquivos do front. **Nenhum teste acessa a internet nem a sua lista real:**
+São 162 testes cobrindo as validações, o banco de dados, as rotas, o catálogo, as temporadas, os comentários, o backup e os arquivos do front. **Nenhum teste acessa a internet nem a sua lista real:**
 
 - Cada teste usa um banco novo numa pasta temporária (`tmp_path`).
 - A Jikan é substituída por uma imitação (`httpx.MockTransport`) que responde com respostas reais gravadas em `tests/dados/` (Frieren e as duas primeiras temporadas de Attack on Titan). Se o código tentar uma consulta que o teste não previu, o teste falha.
@@ -143,5 +146,6 @@ lista-animes/
 - [x] Ordenar a lista (por nota, título ou data)
 - [x] Mostrar a sinopse e os gêneros ao clicar na capa
 - [ ] Guardar a sinopse e os gêneros no banco (hoje são buscados na hora, na Jikan)
-- [ ] Exportar e importar a lista (JSON ou a partir do MyAnimeList)
+- [x] Exportar e importar a lista (arquivo JSON de backup)
+- [ ] Importar a lista exportada pelo próprio MyAnimeList
 - [ ] Se a busca por nome da Jikan falhar, tentar outra fonte (ex.: AniList)

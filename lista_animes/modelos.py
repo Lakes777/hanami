@@ -145,3 +145,52 @@ class AnimeCatalogo(BaseModel):
         description="Temporada anterior e seguinte. None quando não deu para saber "
         "(a busca não traz, e o MyAnimeList pode estar fora do ar)",
     )
+
+
+# ---------- Exportar e importar (backup da lista num arquivo JSON) ----------
+
+
+class ComentarioExportado(ComentarioNovo):
+    """Um comentário dentro do arquivo de backup (sem ids, que mudam de um banco para outro)."""
+
+    criado_em: datetime
+
+
+class AnimeExportado(AnimeNovo):
+    """Um anime dentro do arquivo de backup, com os comentários dele."""
+
+    criado_em: datetime
+    franquia: int = Field(
+        description="Animes com o mesmo número no arquivo são da mesma franquia "
+        "(o número muda ao importar)"
+    )
+    comentarios: list[ComentarioExportado] = Field(default=[], max_length=1000)
+
+    @model_validator(mode="after")
+    def episodios_dos_comentarios_existem(self) -> "AnimeExportado":
+        for comentario in self.comentarios:
+            total = self.total_episodios
+            episodio = comentario.episodio
+            if episodio is not None and total is not None and episodio > total:
+                raise ValueError(
+                    f'um comentário de "{self.titulo}" cita o episódio {episodio}, '
+                    f"mas o anime tem só {total}"
+                )
+        return self
+
+
+class ListaExportada(BaseModel):
+    """O arquivo de backup: a lista inteira, com comentários e franquias."""
+
+    formato: Literal["lista-animes"] = Field(description='Sempre "lista-animes"')
+    versao: Literal[1] = 1
+    exportado_em: datetime | None = None
+    animes: list[AnimeExportado] = Field(max_length=5000)
+
+
+class ResultadoImportacao(BaseModel):
+    importados: int = Field(description="Animes novos que entraram na lista")
+    repetidos: int = Field(
+        description="Animes do arquivo que já estavam na lista (ficaram como estavam)"
+    )
+    comentarios: int = Field(description="Comentários que vieram junto com os animes novos")

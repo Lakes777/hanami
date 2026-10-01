@@ -614,6 +614,35 @@ async function buscarNoCatalogo(evento) {
   }
 }
 
+// ---------- Backup (exportar e importar) ----------
+
+async function importarBackup(evento) {
+  const arquivo = evento.target.files[0];
+  evento.target.value = ""; // permite escolher o mesmo arquivo de novo depois
+  if (!arquivo) return;
+  if (arquivo.size > 5_000_000) return mostrarMensagem("Arquivo grande demais (o máximo é 5 MB).", true);
+  let lista;
+  try {
+    lista = JSON.parse(await arquivo.text());
+  } catch {
+    lista = null;
+  }
+  // Confere antes de enviar: assim a mensagem é clara, e não um erro de validação em inglês.
+  if (lista?.formato !== "lista-animes" || !Array.isArray(lista.animes)) {
+    return mostrarMensagem("Esse arquivo não é um backup da Lista de Animes.", true);
+  }
+  try {
+    const r = await api("/animes/importar", { method: "POST", body: JSON.stringify(lista) });
+    const partes = [`${r.importados} ${r.importados === 1 ? "anime importado" : "animes importados"}`];
+    if (r.repetidos) partes.push(`${r.repetidos} já ${r.repetidos === 1 ? "estava" : "estavam"} na lista`);
+    if (r.comentarios) partes.push(`${r.comentarios} ${r.comentarios === 1 ? "comentário" : "comentários"}`);
+    mostrarMensagem(`Backup importado: ${partes.join(", ")}.`);
+    await atualizarTudo();
+  } catch (erro) {
+    mostrarMensagem(`Não deu para importar: ${erro.message}`, true);
+  }
+}
+
 // ---------- Filtros ----------
 
 function escolherAba(evento) {
@@ -745,6 +774,7 @@ $("#ordem").addEventListener("change", (evento) => {
   carregarLista().catch((erro) => mostrarMensagem(erro.message, true));
 });
 $("#form-comentario").addEventListener("submit", enviarComentario);
+$("#arquivo-backup").addEventListener("change", importarBackup);
 for (const dialogo of document.querySelectorAll("dialog")) {
   dialogo.addEventListener("click", fecharAoClicarFora);
   dialogo.querySelector("[data-fechar]").addEventListener("click", () => dialogo.close());
