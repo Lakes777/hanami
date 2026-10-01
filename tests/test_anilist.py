@@ -88,13 +88,21 @@ def test_busca_no_anilist_remove_repetidos_e_os_sem_id(catalogo, jikan):
     assert [a.mal_id for a in catalogo.buscar("bebop")] == [1]
 
 
+def test_resultado_quebrado_do_anilist_e_pulado_sem_derrubar_os_outros(catalogo, jikan):
+    jikan.responder("/anime", FORA_DO_AR)
+    sem_titulo = {"idMal": 2, "title": {"romaji": None, "english": None}}
+    jikan.anilist = busca_anilist({"idMal": 1, "title": {"romaji": "Cowboy Bebop"}}, sem_titulo)
+
+    assert [a.mal_id for a in catalogo.buscar("bebop")] == [1]
+
+
 @pytest.mark.parametrize(
     "resposta_anilist",
     [
         httpx.Response(503),
         httpx.Response(200, text="<html>não é JSON</html>"),
         httpx.Response(200, json={"errors": [{"message": "Not Found"}], "data": None}),
-        busca_anilist({"idMal": 1, "title": None}),  # sem título nenhum
+        httpx.Response(200, json={"data": {"Page": {"media": None}}}),
         httpx.ConnectError("sem internet"),
     ],
 )

@@ -85,6 +85,11 @@ MIGRACOES = [
 ]
 
 
+def utc(momento: datetime) -> str:
+    """A data em UTC, no formato que o banco usa: "2026-09-30T22:15:00+00:00"."""
+    return momento.astimezone(timezone.utc).isoformat(timespec="seconds")
+
+
 class AnimeRepetido(Exception):
     """O anime (mesmo mal_id) já está na lista."""
 
@@ -343,6 +348,28 @@ class Banco:
 
         Tudo numa transação: se passar do limite, nada é importado.
         """
+        # Arquivo maior que o limite já é recusado antes de inserir qualquer coisa.
+        # Mesmo com repetidos, o total depois é conferido de novo, dentro da transação.
+        if limite_animes is not None and len(animes) > limite_animes:
+            raise LimiteExcedido(f"A demonstração aceita até {limite_animes} animes.")
+        if limite_comentarios is not None:
+            if sum(len(anime.comentarios) for anime in animes) > limite_comentarios:
+                raise LimiteExcedido(
+                    f"A demonstração aceita até {limite_comentarios} comentários."
+                )
+        try:
+            return self._importar(animes, limite_animes, limite_comentarios)
+        except sqlite3.IntegrityError as erro:
+            # Ex.: o mesmo anime adicionado em outra aba no meio da importação.
+            raise AnimeRepetido("Um anime do arquivo entrou na lista agora há pouco. "
+                                "Importe de novo.") from erro
+
+    def _importar(
+        self,
+        animes: list[AnimeExportado],
+        limite_animes: int | None,
+        limite_comentarios: int | None,
+    ) -> ResultadoImportacao:
         importados = repetidos = comentarios = 0
         with self._conectar() as conexao:
             franquia_do_mal_id = dict(
@@ -350,9 +377,11 @@ class Banco:
                     "SELECT mal_id, franquia FROM animes WHERE mal_id IS NOT NULL"
                 ).fetchall()
             )
-            titulos_sem_mal_id = {
-                linha[0].casefold()
-                for linha in conexao.execute("SELECT titulo FROM animes WHERE mal_id IS NULL")
+            franquia_do_titulo = {
+                titulo.casefold(): franquia
+                for titulo, franquia in conexao.execute(
+                    "SELECT titulo, franquia FROM animes WHERE mal_id IS NULL"
+                )
             }
             # Franquia do arquivo -> franquia no banco. Se uma temporada já está na lista,
             # as outras da mesma franquia entram junto dela.
@@ -363,13 +392,17 @@ class Banco:
 
             for anime in animes:
                 if anime.mal_id is not None:
-                    repetido = anime.mal_id in franquia_do_mal_id
+                    franquia_existente = franquia_do_mal_id.get(anime.mal_id)
                 else:
-                    repetido = anime.titulo.casefold() in titulos_sem_mal_id
-                if repetido:
+                    franquia_existente = franquia_do_titulo.get(anime.titulo.casefold())
+                if franquia_existente is not None:
                     repetidos += 1
+                    # As outras temporadas da mesma franquia do arquivo vão para junto dele.
+                    franquias.setdefault(anime.franquia, franquia_existente)
                     continue
                 dados = anime.model_dump(mode="json", exclude={"comentarios"})
+                # Sempre em UTC e no mesmo formato do adicionar() ("...+00:00").
+                dados["criado_em"] = utc(anime.criado_em)
                 dados["franquia"] = franquias.get(anime.franquia)
                 colunas = ", ".join(dados)
                 marcadores = ", ".join(f":{coluna}" for coluna in dados)
@@ -386,7 +419,7 @@ class Banco:
                 if anime.mal_id is not None:
                     franquia_do_mal_id[anime.mal_id] = franquias[anime.franquia]
                 else:
-                    titulos_sem_mal_id.add(anime.titulo.casefold())
+                    franquia_do_titulo[anime.titulo.casefold()] = franquias[anime.franquia]
                 for comentario in anime.comentarios:
                     conexao.execute(
                         "INSERT INTO comentarios (anime_id, texto, episodio, criado_em) "
@@ -395,7 +428,7 @@ class Banco:
                             anime_id,
                             comentario.texto,
                             comentario.episodio,
-                            comentario.criado_em.isoformat(timespec="seconds"),
+                            utc(comentario.criado_em),
                         ),
                     )
                 importados += 1

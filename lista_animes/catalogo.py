@@ -125,7 +125,8 @@ def ler_estreia_anilist(inicio: dict | None) -> date | None:
 
 def ler_anime_anilist(dados: dict) -> AnimeCatalogo | None:
     """Converte um anime do AniList para o nosso formato. None se ele não tiver ID do MyAnimeList
-    (sem o ID, não dá para adicionar: a lista inteira se organiza por ele)."""
+    (sem o ID, não dá para adicionar: a lista inteira se organiza por ele) ou se vier quebrado:
+    um item ruim é pulado, sem derrubar os outros resultados da busca."""
     try:
         if not dados.get("idMal"):
             return None
@@ -145,8 +146,8 @@ def ler_anime_anilist(dados: dict) -> AnimeCatalogo | None:
             estreia=ler_estreia_anilist(dados.get("startDate")),
             fonte="anilist",
         )
-    except (KeyError, TypeError, ValueError) as erro:
-        raise CatalogoIndisponivel("O AniList respondeu num formato inesperado.") from erro
+    except (KeyError, TypeError, ValueError):  # ValueError inclui o erro de validação do Pydantic
+        return None
 
 
 class Catalogo:
@@ -201,6 +202,8 @@ class Catalogo:
             itens = resposta.json()["data"]["Page"]["media"]
         except (ValueError, KeyError, TypeError) as erro:
             raise CatalogoIndisponivel("O AniList respondeu num formato inesperado.") from erro
+        if not isinstance(itens, list):
+            raise CatalogoIndisponivel("O AniList respondeu num formato inesperado.")
         animes, vistos = [], set()
         for item in itens:
             anime = ler_anime_anilist(item)

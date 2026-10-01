@@ -48,7 +48,7 @@ API REST em Python com **FastAPI** para organizar sua lista de animes: o que voc
 | `GET` | `/animes/estatisticas` | Resumo da lista |
 | `GET` | `/animes/exportar` | Baixa a lista inteira (com comentários e temporadas) num arquivo JSON |
 | `POST` | `/animes/importar` | Junta à lista os animes de um backup; os que já estão nela ficam como estão |
-| `GET` | `/catalogo/busca?q=frieren` | Procura animes no MyAnimeList |
+| `GET` | `/catalogo/busca?q=frieren` | Procura animes no MyAnimeList (ou no AniList, se ele estiver fora do ar) |
 | `GET` | `/catalogo/{mal_id}` | Detalhes de um anime: sinopse, gêneros, ano, nota no MAL |
 | `GET` | `/saude` | Diz se a API está no ar |
 
@@ -99,7 +99,7 @@ pip install -r requirements-dev.txt
 pytest
 ```
 
-São 175 testes cobrindo as validações, o banco de dados, as rotas, o catálogo, as temporadas, os comentários, o backup e os arquivos do front. **Nenhum teste acessa a internet nem a sua lista real:**
+São 183 testes cobrindo as validações, o banco de dados, as rotas, o catálogo, as temporadas, os comentários, o backup e os arquivos do front. **Nenhum teste acessa a internet nem a sua lista real:**
 
 - Cada teste usa um banco novo numa pasta temporária (`tmp_path`).
 - A Jikan é substituída por uma imitação (`httpx.MockTransport`) que responde com respostas reais gravadas em `tests/dados/` (Frieren e as duas primeiras temporadas de Attack on Titan). Se o código tentar uma consulta que o teste não previu, o teste falha.

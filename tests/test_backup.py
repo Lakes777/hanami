@@ -1,5 +1,7 @@
 """Exportar a lista num arquivo JSON e importar de volta (backup)."""
 
+import sqlite3
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -179,3 +181,73 @@ def test_demo_recusa_importar_alem_do_limite_de_comentarios(tmp_path, catalogo):
 
     assert resposta.status_code == 403
     assert "comentários" in resposta.json()["detail"]
+
+
+def test_data_sem_fuso_e_recusada(cliente):
+    sem_fuso = item(FRIEREN, 1, criado_em="2026-01-01T10:00:00")
+
+    assert cliente.post("/animes/importar", json=arquivo(sem_fuso)).status_code == 422
+
+
+def test_datas_importadas_ficam_em_utc(cliente):
+    comentario = {"texto": "oi", "criado_em": "2026-01-01T07:00:00-03:00"}
+    com_fuso = item(FRIEREN, 1, criado_em="2026-01-01T10:00:00Z", comentarios=[comentario])
+
+    cliente.post("/animes/importar", json=arquivo(com_fuso))
+
+    [anime] = cliente.get("/animes").json()
+    [salvo] = cliente.get(f"/animes/{anime['id']}/comentarios").json()
+    assert anime["criado_em"].startswith("2026-01-01T10:00:00")
+    assert salvo["criado_em"].startswith("2026-01-01T10:00:00")  # 07:00 em -03:00 = 10:00 UTC
+
+
+def test_repetido_no_arquivo_puxa_a_temporada_para_a_franquia_dele(cliente):
+    # O Frieren aparece duas vezes, em franquias diferentes do arquivo; a 2ª temporada
+    # está junto da segunda aparição e precisa ir para a franquia do Frieren.
+    lista = arquivo(item(FRIEREN, 5), item(FRIEREN, 9), item(FRIEREN_2, 9))
+
+    cliente.post("/animes/importar", json=lista)
+
+    franquias = {a["franquia"] for a in cliente.get("/animes").json()}
+    assert len(franquias) == 1
+
+
+def test_repetido_pelo_titulo_tambem_puxa_a_franquia(cliente):
+    caseiro = adicionar(cliente, {"titulo": "Anime Caseiro"})
+    continuacao = {"titulo": "Anime Caseiro 2"}
+
+    lista = arquivo(item({"titulo": "anime caseiro"}, 3), item(continuacao, 3))
+    cliente.post("/animes/importar", json=lista)
+
+    franquias = {a["titulo"]: a["franquia"] for a in cliente.get("/animes").json()}
+    assert franquias["Anime Caseiro 2"] == caseiro["franquia"]
+
+
+def test_arquivo_maior_que_o_limite_e_recusado_antes_de_inserir(cliente, monkeypatch):
+    cliente.app.state.limite_animes = 1
+    inseriu = []
+    monkeypatch.setattr(cliente.app.state.banco, "_importar", lambda *a: inseriu.append(1))
+
+    resposta = cliente.post("/animes/importar", json=arquivo(item(NOVO_A, 1), item(NOVO_B, 2)))
+
+    assert resposta.status_code == 403
+    assert inseriu == []
+
+
+def test_conflito_durante_a_importacao_vira_409(cliente, monkeypatch):
+    def conflito(*args):
+        raise sqlite3.IntegrityError("UNIQUE constraint failed: animes.mal_id")
+
+    monkeypatch.setattr(cliente.app.state.banco, "_importar", conflito)
+
+    resposta = cliente.post("/animes/importar", json=arquivo(item(FRIEREN, 1)))
+
+    assert resposta.status_code == 409
+    assert "Importe de novo" in resposta.json()["detail"]
+
+
+def test_arquivo_com_comentarios_demais_e_recusado(cliente):
+    muitos = [COMENTARIO] * 1000
+    lista = arquivo(*[item({"titulo": f"Anime {n}"}, n, comentarios=muitos) for n in range(21)])
+
+    assert cliente.post("/animes/importar", json=lista).status_code == 422

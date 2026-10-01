@@ -8,7 +8,7 @@ from datetime import date, datetime
 from typing import Literal
 from enum import Enum
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validator
 
 # Só aceita links web (a capa do anime vem da Jikan, ex.: https://cdn.myanimelist.net/...).
 PADRAO_URL = r"^https?://\S+$"
@@ -154,16 +154,20 @@ class AnimeCatalogo(BaseModel):
 # ---------- Exportar e importar (backup da lista num arquivo JSON) ----------
 
 
+# Datas do backup precisam dizer o fuso ("...Z" ou "-03:00"): sem ele, não dá para saber
+# a hora certa, e o comentário apareceria horas fora do lugar.
+
+
 class ComentarioExportado(ComentarioNovo):
     """Um comentário dentro do arquivo de backup (sem ids, que mudam de um banco para outro)."""
 
-    criado_em: datetime
+    criado_em: AwareDatetime
 
 
 class AnimeExportado(AnimeNovo):
     """Um anime dentro do arquivo de backup, com os comentários dele."""
 
-    criado_em: datetime
+    criado_em: AwareDatetime
     franquia: int = Field(
         description="Animes com o mesmo número no arquivo são da mesma franquia "
         "(o número muda ao importar)"
@@ -183,6 +187,9 @@ class AnimeExportado(AnimeNovo):
         return self
 
 
+MAX_COMENTARIOS_NO_BACKUP = 20_000
+
+
 class ListaExportada(BaseModel):
     """O arquivo de backup: a lista inteira, com comentários e franquias."""
 
@@ -190,6 +197,16 @@ class ListaExportada(BaseModel):
     versao: Literal[1] = 1
     exportado_em: datetime | None = None
     animes: list[AnimeExportado] = Field(max_length=5000)
+
+    @model_validator(mode="after")
+    def comentarios_cabem(self) -> "ListaExportada":
+        # Um teto para o arquivo inteiro: sem ele, um arquivo enorme prenderia o servidor.
+        total = sum(len(anime.comentarios) for anime in self.animes)
+        if total > MAX_COMENTARIOS_NO_BACKUP:
+            raise ValueError(
+                f"o arquivo tem {total} comentários; o máximo é {MAX_COMENTARIOS_NO_BACKUP}"
+            )
+        return self
 
 
 class ResultadoImportacao(BaseModel):

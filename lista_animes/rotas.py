@@ -197,7 +197,13 @@ def exportar(banco: Banco = Depends(pegar_banco)) -> JSONResponse:
     )
 
 
-@roteador.post("/importar", responses={403: {"description": "Limite da demonstração"}})
+@roteador.post(
+    "/importar",
+    responses={
+        403: {"description": "Limite da demonstração"},
+        409: {"description": "Um anime do arquivo entrou na lista durante a importação"},
+    },
+)
 def importar(
     lista: ListaExportada,
     banco: Banco = Depends(pegar_banco),
@@ -213,6 +219,8 @@ def importar(
         return banco.importar(lista.animes, limite, limite_comentarios)
     except LimiteExcedido as erro:
         raise HTTPException(status.HTTP_403_FORBIDDEN, str(erro)) from erro
+    except AnimeRepetido as erro:
+        raise HTTPException(status.HTTP_409_CONFLICT, str(erro)) from erro
 
 
 @roteador.get("/estatisticas")
