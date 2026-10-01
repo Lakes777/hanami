@@ -14,7 +14,7 @@ API REST em Python com **FastAPI** para organizar sua lista de animes: o que voc
 
 ## Funcionalidades
 
-- **Adicionar do MyAnimeList:** busque pelo nome, pelo ID ou colando o link do anime. Título, número de episódios e capa são preenchidos sozinhos.
+- **Adicionar do MyAnimeList:** busque pelo nome, pelo ID ou colando o link do anime. Título, número de episódios e capa são preenchidos sozinhos. Se a busca por nome do MyAnimeList estiver fora do ar, ela é refeita no [AniList](https://anilist.co), que diz o ID de cada anime no MyAnimeList; adicionar continua funcionando igual.
 - **Acompanhar o progresso:** status (quero ver, assistindo, concluído, abandonado), episódios vistos com barra de progresso e nota de 1 a 10.
 - **Escolher o episódio:** digite o número (ou use as setinhas), ou clique em **+1 ep.**. Ao começar, o anime passa para "assistindo". No último episódio, vira "concluído".
 - **Temporadas juntas:** no MyAnimeList, cada temporada é um anime separado. Ao adicionar, a API vê na Jikan qual é a temporada anterior e a seguinte, e as temporadas da mesma franquia ficam num quadro só ("Temporada 1", "Temporada 2", "Filme"...). O botão **Outras temporadas** mostra as que faltam e adiciona com um clique.
@@ -99,7 +99,7 @@ pip install -r requirements-dev.txt
 pytest
 ```
 
-São 162 testes cobrindo as validações, o banco de dados, as rotas, o catálogo, as temporadas, os comentários, o backup e os arquivos do front. **Nenhum teste acessa a internet nem a sua lista real:**
+São 175 testes cobrindo as validações, o banco de dados, as rotas, o catálogo, as temporadas, os comentários, o backup e os arquivos do front. **Nenhum teste acessa a internet nem a sua lista real:**
 
 - Cada teste usa um banco novo numa pasta temporária (`tmp_path`).
 - A Jikan é substituída por uma imitação (`httpx.MockTransport`) que responde com respostas reais gravadas em `tests/dados/` (Frieren e as duas primeiras temporadas de Attack on Titan). Se o código tentar uma consulta que o teste não previu, o teste falha.
@@ -148,4 +148,4 @@ lista-animes/
 - [ ] Guardar a sinopse e os gêneros no banco (hoje são buscados na hora, na Jikan)
 - [x] Exportar e importar a lista (arquivo JSON de backup)
 - [ ] Importar a lista exportada pelo próprio MyAnimeList
-- [ ] Se a busca por nome da Jikan falhar, tentar outra fonte (ex.: AniList)
+- [x] Se a busca por nome da Jikan falhar, tentar outra fonte (AniList)

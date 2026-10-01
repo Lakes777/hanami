@@ -145,6 +145,10 @@ class AnimeCatalogo(BaseModel):
         description="Temporada anterior e seguinte. None quando não deu para saber "
         "(a busca não traz, e o MyAnimeList pode estar fora do ar)",
     )
+    fonte: Literal["jikan", "anilist"] = Field(
+        default="jikan",
+        description='De onde veio: "anilist" quando a busca da Jikan falhou e o AniList respondeu',
+    )
 
 
 # ---------- Exportar e importar (backup da lista num arquivo JSON) ----------

@@ -601,7 +601,12 @@ async function buscarNoCatalogo(evento) {
     const animes = await procurar(termo);
     $("#resultados-catalogo").replaceChildren(...animes.map(criarCartaoCatalogo));
     marcarAdicionadosNoCatalogo();
-    mostrarAviso(aviso, animes.length ? "" : `Nenhum anime encontrado para "${termo}".`);
+    let texto = animes.length ? "" : `Nenhum anime encontrado para "${termo}".`;
+    if (animes.some((anime) => anime.fonte === "anilist")) {
+      texto = "A busca do MyAnimeList está fora do ar agora, então estes resultados vieram do AniList."
+        + " Adicionar funciona do mesmo jeito.";
+    }
+    mostrarAviso(aviso, texto);
   } catch (erro) {
     $("#resultados-catalogo").replaceChildren();
     let texto = erro.message;

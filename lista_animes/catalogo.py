@@ -4,8 +4,15 @@ A Jikan é gratuita e não pede chave, mas tem limites: cerca de 3 consultas
 por segundo. A busca por nome consulta o MyAnimeList na hora e às vezes falha
 com erro 504, quando o MyAnimeList está fora do ar. Por isso, toda falha vira
 CatalogoIndisponivel, com uma mensagem que dá para mostrar a quem usa a API.
+
+Quando a busca por nome da Jikan falha, ela é refeita no AniList (https://anilist.co),
+outro catálogo gratuito e sem chave. Cada anime do AniList diz o ID dele no MyAnimeList,
+então o resto do app continua igual: adicionar usa a busca por ID da Jikan, que
+costuma funcionar mesmo com o MyAnimeList fora do ar.
 """
 
+import html
+import re
 from datetime import date
 
 import httpx
@@ -13,6 +20,37 @@ import httpx
 from lista_animes.modelos import AnimeCatalogo, Relacionado
 
 URL_JIKAN = "https://api.jikan.moe/v4"
+URL_ANILIST = "https://graphql.anilist.co"
+
+# O AniList usa GraphQL: um POST só, dizendo exatamente quais campos devolver.
+BUSCA_ANILIST = """
+query ($busca: String, $limite: Int) {
+  Page(perPage: $limite) {
+    media(search: $busca, type: ANIME, isAdult: false) {
+      idMal
+      title { romaji english }
+      episodes
+      format
+      seasonYear
+      startDate { year month day }
+      coverImage { large }
+      genres
+      description(asHtml: false)
+    }
+  }
+}
+"""
+
+# O "format" do AniList com o nome que a Jikan (MyAnimeList) usa para o mesmo tipo.
+TIPOS_ANILIST = {
+    "TV": "TV",
+    "TV_SHORT": "TV",
+    "MOVIE": "Movie",
+    "SPECIAL": "Special",
+    "OVA": "OVA",
+    "ONA": "ONA",
+    "MUSIC": "Music",
+}
 
 
 # No MyAnimeList, cada temporada é um anime separado, ligado aos outros por "relações".
@@ -68,6 +106,49 @@ def ler_anime(dados: dict) -> AnimeCatalogo:
         raise CatalogoIndisponivel("A Jikan respondeu num formato inesperado.") from erro
 
 
+def limpar_sinopse(texto: str | None) -> str | None:
+    """A sinopse do AniList vem com tags (<br>, <i>) e entidades (&quot;): sobra só o texto."""
+    if not texto:
+        return None
+    texto = re.sub(r"<br\s*/?>", "\n", texto)
+    texto = html.unescape(re.sub(r"<[^>]+>", "", texto))
+    return re.sub(r"\n{3,}", "\n\n", texto).strip() or None
+
+
+def ler_estreia_anilist(inicio: dict | None) -> date | None:
+    # O AniList manda a data em partes; sem o dia (estreia ainda não marcada), fica sem data.
+    inicio = inicio or {}
+    if not (inicio.get("year") and inicio.get("month") and inicio.get("day")):
+        return None
+    return date(inicio["year"], inicio["month"], inicio["day"])
+
+
+def ler_anime_anilist(dados: dict) -> AnimeCatalogo | None:
+    """Converte um anime do AniList para o nosso formato. None se ele não tiver ID do MyAnimeList
+    (sem o ID, não dá para adicionar: a lista inteira se organiza por ele)."""
+    try:
+        if not dados.get("idMal"):
+            return None
+        titulos = dados.get("title") or {}
+        return AnimeCatalogo(
+            mal_id=dados["idMal"],
+            titulo=titulos.get("romaji") or titulos["english"],
+            titulo_ingles=titulos.get("english"),
+            total_episodios=dados.get("episodes"),
+            imagem_url=(dados.get("coverImage") or {}).get("large"),
+            ano=dados.get("seasonYear"),
+            # A nota do AniList não é a do MyAnimeList: fica vazia em vez de enganar.
+            nota_mal=None,
+            tipo=TIPOS_ANILIST.get(dados.get("format")),
+            sinopse=limpar_sinopse(dados.get("description")),
+            generos=dados.get("genres") or [],
+            estreia=ler_estreia_anilist(dados.get("startDate")),
+            fonte="anilist",
+        )
+    except (KeyError, TypeError, ValueError) as erro:
+        raise CatalogoIndisponivel("O AniList respondeu num formato inesperado.") from erro
+
+
 class Catalogo:
     def __init__(self, transport: httpx.BaseTransport | None = None) -> None:
         # Nos testes, o transport é um httpx.MockTransport: nenhuma consulta vai à internet.
@@ -91,7 +172,45 @@ class Catalogo:
         return resposta
 
     def buscar(self, termo: str, limite: int = 10) -> list[AnimeCatalogo]:
-        """Procura animes pelo nome. O sfw esconde conteúdo adulto dos resultados."""
+        """Procura animes pelo nome na Jikan e, se ela falhar, no AniList.
+
+        Se os dois falharem, vale a mensagem da Jikan (é o catálogo principal).
+        """
+        try:
+            return self._buscar_na_jikan(termo, limite)
+        except CatalogoIndisponivel:
+            try:
+                return self._buscar_no_anilist(termo, limite)
+            except CatalogoIndisponivel:
+                pass
+            raise  # o "raise" sozinho relança o erro da Jikan
+
+    def _buscar_no_anilist(self, termo: str, limite: int) -> list[AnimeCatalogo]:
+        try:
+            with httpx.Client(timeout=10, transport=self._transport) as cliente:
+                resposta = cliente.post(
+                    URL_ANILIST,
+                    json={"query": BUSCA_ANILIST, "variables": {"busca": termo, "limite": limite}},
+                    headers={"Accept": "application/json"},
+                )
+        except httpx.HTTPError as erro:
+            raise CatalogoIndisponivel("Não consegui acessar o AniList.") from erro
+        if resposta.status_code != 200:
+            raise CatalogoIndisponivel(f"O AniList recusou a busca (erro {resposta.status_code}).")
+        try:
+            itens = resposta.json()["data"]["Page"]["media"]
+        except (ValueError, KeyError, TypeError) as erro:
+            raise CatalogoIndisponivel("O AniList respondeu num formato inesperado.") from erro
+        animes, vistos = [], set()
+        for item in itens:
+            anime = ler_anime_anilist(item)
+            if anime is not None and anime.mal_id not in vistos:
+                vistos.add(anime.mal_id)
+                animes.append(anime)
+        return animes
+
+    def _buscar_na_jikan(self, termo: str, limite: int) -> list[AnimeCatalogo]:
+        # O sfw esconde conteúdo adulto dos resultados.
         resposta = self._get("/anime", params={"q": termo, "limit": limite, "sfw": "true"})
         if resposta.status_code != 200:
             raise CatalogoIndisponivel(f"A Jikan recusou a busca (erro {resposta.status_code}).")
