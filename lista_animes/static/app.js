@@ -546,7 +546,8 @@ function criarCartaoCatalogo(anime) {
   cartao.querySelector(".cartao__info").textContent = info.join(" · ");
   cartao.querySelector(".cartao__generos").textContent = anime.generos.slice(0, 3).join(", ");
 
-  cartao.querySelector("button").addEventListener("click", async (evento) => {
+  // Pelo data-acao: o primeiro <button> do cartão é a capa (que abre os detalhes).
+  cartao.querySelector('[data-acao="adicionar"]').addEventListener("click", async (evento) => {
     const botao = evento.currentTarget;
     botao.disabled = true;
     try {
@@ -564,7 +565,7 @@ function criarCartaoCatalogo(anime) {
 function marcarAdicionadosNoCatalogo() {
   for (const cartao of $("#resultados-catalogo").children) {
     const jaNaLista = estado.malIdsNaLista.has(Number(cartao.dataset.malId));
-    const botao = cartao.querySelector("button");
+    const botao = cartao.querySelector('[data-acao="adicionar"]');
     botao.disabled = jaNaLista;
     botao.textContent = jaNaLista ? "✓ Na sua lista" : "+ Adicionar";
   }
