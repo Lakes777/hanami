@@ -14,6 +14,22 @@ const estado = {
 
 const $ = (seletor) => document.querySelector(seletor);
 
+// Lixeira da Lucide (lucide.dev, licença ISC), montada elemento por elemento (nada de HTML em texto).
+function iconeLixeira() {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  for (const [nome, valor] of Object.entries({
+    viewBox: "0 0 24 24", width: "18", height: "18", fill: "none", stroke: "currentColor",
+    "stroke-width": "2", "stroke-linecap": "round", "stroke-linejoin": "round", "aria-hidden": "true",
+  })) svg.setAttribute(nome, valor);
+  for (const d of ["M3 6h18", "M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6", "M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2",
+    "M10 11v6", "M14 11v6"]) {
+    const caminho = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    caminho.setAttribute("d", d);
+    svg.append(caminho);
+  }
+  return svg;
+}
+
 // ---------- Conversa com a API ----------
 
 async function api(caminho, opcoes = {}) {
@@ -58,7 +74,7 @@ function mostrarAviso(elemento, texto) {
 async function carregarEstatisticas() {
   const e = await api("/animes/estatisticas");
   const numeros = [
-    [e.total, "animes na lista"],
+    [e.total, e.total === 1 ? "anime na lista" : "animes na lista"],
     [e.por_status.assistindo, "assistindo"],
     [e.por_status.concluido, "concluídos"],
     [e.episodios_assistidos, "episódios vistos"],
@@ -263,7 +279,11 @@ function criarCartaoAnime(anime) {
   comentarios.textContent = anime.comentarios ? `Comentários (${anime.comentarios})` : "Comentar";
   comentarios.addEventListener("click", () => abrirComentarios(anime));
 
-  cartao.querySelector('[data-acao="remover"]').addEventListener("click", () => remover(anime));
+  const lixeira = cartao.querySelector('[data-acao="remover"]');
+  lixeira.append(iconeLixeira());
+  lixeira.setAttribute("aria-label", `Remover ${anime.titulo}`);
+  lixeira.title = "Remover da lista";
+  lixeira.addEventListener("click", () => remover(anime));
   return cartao;
 }
 
@@ -292,7 +312,7 @@ async function carregarLista() {
     const filtrando = estado.status || estado.busca;
     aviso = filtrando
       ? "Nenhum anime com esse filtro."
-      : "Sua lista está vazia. Busque um anime acima e clique em + Adicionar.";
+      : "Sua lista está vazia. Busque um anime na aba Adicionar e clique em + Adicionar.";
   }
   mostrarAviso($("#aviso-lista"), aviso);
 }
@@ -495,7 +515,11 @@ async function buscarNoCatalogo(evento) {
 function escolherAba(evento) {
   const aba = evento.target.closest(".aba");
   if (!aba) return;
-  for (const outra of $("#abas").children) outra.classList.toggle("aba--ativa", outra === aba);
+  for (const outra of $("#abas").querySelectorAll(".aba")) {
+    outra.classList.toggle("aba--ativa", outra === aba);
+    outra.setAttribute("aria-selected", String(outra === aba));
+  }
+  moverPilula($("#abas-pilula"), aba);
   estado.status = aba.dataset.status;
   carregarLista().catch((erro) => mostrarMensagem(erro.message, true));
 }
@@ -510,6 +534,93 @@ function filtrarPorTitulo(evento) {
     carregarLista().catch((erro) => mostrarMensagem(erro.message, true));
   }, 300);
 }
+
+// ---------- Abas (iguais às do portfólio e do Controle de Gastos) ----------
+
+const telas = [...document.querySelectorAll("main > .aba-tela")];
+const linksMenu = document.querySelectorAll(".menu__link");
+let abasIniciadas = false;
+let trocaAtual = 0; // ao clicar rápido nas duas abas, só a última troca vale
+
+// Pílula desliza até o item ativo (serve para o menu e para os filtros de status)
+function moverPilula(pilula, ativo) {
+  if (!ativo || !ativo.offsetWidth) return; // escondida (outra aba aberta): mede depois
+  const primeiraVez = !pilula.style.width;
+  if (primeiraVez) pilula.style.transition = "none"; // nasce no lugar, sem deslizar do canto
+  pilula.style.width = `${ativo.offsetWidth}px`;
+  pilula.style.height = `${ativo.offsetHeight}px`;
+  pilula.style.transform = `translate(${ativo.offsetLeft}px, ${ativo.offsetTop}px)`;
+  if (primeiraVez) {
+    void pilula.offsetWidth;
+    pilula.style.transition = "";
+  }
+}
+
+function moverPilulas() {
+  moverPilula($("#menu-pilula"), $(".menu__link--ativo"));
+  moverPilula($("#abas-pilula"), $(".aba--ativa"));
+}
+
+function mostrarAba(focar) {
+  const id = decodeURIComponent(location.hash.slice(1));
+  const atual = telas.find((tela) => tela.id === id) ?? telas[0];
+
+  linksMenu.forEach((link) => {
+    const ativo = link.getAttribute("href") === `#${atual.id}`;
+    link.classList.toggle("menu__link--ativo", ativo);
+    if (ativo) link.setAttribute("aria-current", "page");
+    else link.removeAttribute("aria-current");
+  });
+  moverPilula($("#menu-pilula"), $(".menu__link--ativo"));
+  const titulo = atual.querySelector(".aba-tela__titulo");
+  document.title = `${titulo.textContent} | Lista de Animes`;
+
+  const anterior = abasIniciadas && telas.find((tela) => !tela.hidden && tela !== atual);
+  const estaTroca = ++trocaAtual;
+  abasIniciadas = true;
+
+  function entrar() {
+    if (estaTroca !== trocaAtual) return;
+    telas.forEach((tela) => {
+      tela.hidden = tela !== atual;
+      tela.classList.remove("aba-tela--saindo");
+    });
+    atual.classList.remove("aba-tela--entrando");
+    void atual.offsetWidth; // força o navegador a reiniciar a animação
+    atual.classList.add("aba-tela--entrando", "animar-barras");
+    setTimeout(() => atual.classList.remove("animar-barras"), 1200);
+    // A pílula dos filtros só pode ser medida com a aba visível.
+    moverPilula($("#abas-pilula"), $(".aba--ativa"));
+    window.scrollTo({ top: 0, behavior: "instant" });
+    if (focar) titulo.focus({ preventScroll: true });
+  }
+
+  // A aba anterior some rapidinho antes da nova entrar
+  if (anterior) {
+    anterior.classList.add("aba-tela--saindo");
+    setTimeout(entrar, 150);
+  } else {
+    entrar();
+  }
+}
+
+function iniciarAbas() {
+  document.documentElement.classList.add("com-abas");
+  window.addEventListener("hashchange", () => mostrarAba(true));
+  window.addEventListener("resize", moverPilulas);
+  document.fonts.ready.then(moverPilulas);
+  mostrarAba(false);
+}
+
+// Brilho que segue o mouse nos cartões (.spot). Um ouvinte só, na página toda,
+// porque os cartões são recriados a cada atualização da lista.
+document.addEventListener("pointermove", (evento) => {
+  const cartao = evento.target.closest?.(".spot");
+  if (!cartao) return;
+  const caixa = cartao.getBoundingClientRect();
+  cartao.style.setProperty("--mx", `${evento.clientX - caixa.left}px`);
+  cartao.style.setProperty("--my", `${evento.clientY - caixa.top}px`);
+});
 
 // ---------- Início ----------
 
@@ -527,6 +638,7 @@ for (const dialogo of document.querySelectorAll("dialog")) {
   dialogo.querySelector("[data-fechar]").addEventListener("click", () => dialogo.close());
 }
 
+iniciarAbas();
 mostrarAvisoDemo().catch(() => {});
 atualizarTudo().catch(() =>
   mostrarAviso($("#aviso-lista"), "Não consegui falar com a API. Ela está rodando?"),

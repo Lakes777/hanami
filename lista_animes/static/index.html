@@ -16,6 +16,14 @@
       <h1 class="topo__titulo">Lista de Animes</h1>
       <a class="topo__link" href="/docs">Documentação da API</a>
     </div>
+    <div class="container">
+      <!-- Cada link abre uma aba (o endereço muda para #minha-lista ou #adicionar) -->
+      <nav class="menu" aria-label="Seções">
+        <span class="menu__pilula" id="menu-pilula" aria-hidden="true"></span>
+        <a class="menu__link" href="#minha-lista">Minha lista</a>
+        <a class="menu__link" href="#adicionar">Adicionar</a>
+      </nav>
+    </div>
   </header>
 
   <main class="container">
@@ -26,42 +34,53 @@
       <a href="https://github.com/Lakes777/lista-animes" target="_blank" rel="noopener">Ver o código no GitHub</a>
     </p>
 
-    <!-- Estatísticas: preenchidas pelo app.js com GET /animes/estatisticas -->
-    <section class="estatisticas" id="estatisticas" aria-label="Estatísticas"></section>
+    <!-- Cada aba entra em até 3 blocos (data-grupo 0, 1 e 2): título, conteúdo principal, resto -->
+    <section class="aba-tela" id="minha-lista" aria-labelledby="titulo-lista">
+      <h2 class="aba-tela__titulo reveal" id="titulo-lista" tabindex="-1" data-grupo="0">Minha lista</h2>
 
-    <section class="bloco">
-      <h2 class="bloco__titulo">Adicionar do MyAnimeList</h2>
-      <form class="busca" id="form-catalogo">
-        <input class="campo" id="termo-catalogo" type="search" maxlength="200"
-               placeholder="Nome, ID ou link do MyAnimeList (ex.: frieren ou 52991)" required>
-        <button class="botao" type="submit">Buscar</button>
-      </form>
-      <p class="aviso" id="aviso-catalogo" hidden></p>
-      <div class="grade" id="resultados-catalogo"></div>
+      <!-- Estatísticas: preenchidas pelo app.js com GET /animes/estatisticas -->
+      <div class="estatisticas reveal" id="estatisticas" aria-label="Estatísticas" data-grupo="1"></div>
+
+      <div class="reveal" data-grupo="2">
+        <div class="filtros">
+          <div class="abas" id="abas" role="tablist">
+            <span class="abas__pilula" id="abas-pilula" aria-hidden="true"></span>
+            <button class="aba aba--ativa" data-status="" role="tab">Todos</button>
+            <button class="aba" data-status="assistindo" role="tab">Assistindo</button>
+            <button class="aba" data-status="quero_ver" role="tab">Quero ver</button>
+            <button class="aba" data-status="concluido" role="tab">Concluídos</button>
+            <button class="aba" data-status="abandonado" role="tab">Abandonados</button>
+          </div>
+          <input class="campo campo--pequeno" id="filtro-titulo" type="search"
+                 placeholder="Filtrar por título" maxlength="100" aria-label="Filtrar por título">
+        </div>
+        <p class="aviso" id="aviso-lista" hidden></p>
+        <div class="grade" id="lista"></div>
+      </div>
     </section>
 
-    <section class="bloco">
-      <h2 class="bloco__titulo">Minha lista</h2>
-      <div class="filtros">
-        <div class="abas" id="abas" role="tablist">
-          <button class="aba aba--ativa" data-status="" role="tab">Todos</button>
-          <button class="aba" data-status="assistindo" role="tab">Assistindo</button>
-          <button class="aba" data-status="quero_ver" role="tab">Quero ver</button>
-          <button class="aba" data-status="concluido" role="tab">Concluídos</button>
-          <button class="aba" data-status="abandonado" role="tab">Abandonados</button>
-        </div>
-        <input class="campo campo--pequeno" id="filtro-titulo" type="search"
-               placeholder="Filtrar por título" maxlength="100">
+    <section class="aba-tela" id="adicionar" aria-labelledby="titulo-adicionar">
+      <div class="reveal" data-grupo="0">
+        <h2 class="aba-tela__titulo" id="titulo-adicionar" tabindex="-1">Adicionar do MyAnimeList</h2>
+        <p class="aba-tela__nota">Busque pelo nome, pelo ID ou colando o link da página do anime no MyAnimeList.</p>
       </div>
-      <p class="aviso" id="aviso-lista" hidden></p>
-      <div class="grade" id="lista"></div>
+      <form class="busca reveal" id="form-catalogo" data-grupo="1">
+        <input class="campo" id="termo-catalogo" type="search" maxlength="200"
+               placeholder="Nome, ID ou link do MyAnimeList (ex.: frieren ou 52991)"
+               aria-label="Anime para buscar" required>
+        <button class="botao botao--vivo" type="submit">Buscar</button>
+      </form>
+      <div class="reveal" data-grupo="2">
+        <p class="aviso" id="aviso-catalogo" hidden></p>
+        <div class="grade" id="resultados-catalogo"></div>
+      </div>
     </section>
   </main>
 
   <!-- Moldes dos cartões: o app.js copia e preenche com textContent (nunca innerHTML) -->
   <template id="molde-catalogo">
-    <article class="cartao">
-      <img class="cartao__capa" alt="" loading="lazy">
+    <article class="cartao spot">
+      <div class="cartao__moldura"><img class="cartao__capa" alt="" loading="lazy"></div>
       <div class="cartao__corpo">
         <h3 class="cartao__titulo"></h3>
         <p class="cartao__info"></p>
@@ -72,8 +91,8 @@
   </template>
 
   <template id="molde-anime">
-    <article class="cartao">
-      <img class="cartao__capa" alt="" loading="lazy">
+    <article class="cartao spot">
+      <div class="cartao__moldura"><img class="cartao__capa" alt="" loading="lazy"></div>
       <div class="cartao__corpo">
         <p class="cartao__temporada" hidden></p>
         <h3 class="cartao__titulo"></h3>
@@ -102,7 +121,8 @@
         </label>
         <div class="cartao__acoes">
           <button class="botao botao--pequeno botao--fantasma" type="button" data-acao="comentarios"></button>
-          <button class="botao botao--pequeno botao--perigo" type="button" data-acao="remover">Remover</button>
+          <!-- Lixeira: o ícone é desenhado pelo app.js; o nome do anime vai no aria-label -->
+          <button class="botao-icone" type="button" data-acao="remover"></button>
         </div>
       </div>
     </article>

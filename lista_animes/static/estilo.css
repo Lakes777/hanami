@@ -17,6 +17,13 @@
   --font: "Inter", system-ui, sans-serif;
   --mono: "Fira Code", monospace;
   --radius: 14px;
+  /* As mesmas curvas do portfólio */
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-texto: cubic-bezier(0, -0.02, 0.49, 0.99);
+}
+
+html {
+  scroll-padding-top: 130px; /* o topo fica fixo; a rolagem para logo abaixo dele */
 }
 
 *,
@@ -40,7 +47,11 @@ body {
 
 /* ---------- Topo ---------- */
 .topo {
-  background: var(--topo);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgb(18 19 21 / 0.92);
+  backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--border);
 }
 
@@ -49,7 +60,79 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding-block: 20px;
+  padding-block: 16px 10px;
+}
+
+/* ---------- Menu (abas da página) ---------- */
+.menu {
+  position: relative;
+  display: flex;
+  gap: 4px;
+  padding-bottom: 10px;
+}
+
+.menu__link {
+  position: relative;
+  z-index: 1;
+  padding: 6px 14px;
+  border-radius: 999px;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  text-decoration: none;
+  transition: color 0.25s;
+}
+
+.menu__link:hover,
+.menu__link--ativo {
+  color: var(--text);
+}
+
+.menu__link:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+/* Fundo do item ativo: desliza de um para o outro (posição medida no app.js) */
+.menu__pilula,
+.abas__pilula {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 999px;
+  pointer-events: none;
+  transition:
+    transform 0.35s var(--ease-out),
+    width 0.35s var(--ease-out);
+}
+
+.menu__pilula {
+  background: rgb(228 229 231 / 0.08);
+  box-shadow: inset 0 0 0 1px rgb(228 229 231 / 0.06);
+}
+
+/* ---------- Telas (cada aba) ---------- */
+.com-abas .aba-tela[hidden] {
+  display: none !important;
+}
+
+.aba-tela {
+  padding-block: 28px 56px;
+}
+
+.aba-tela__titulo {
+  margin: 0 0 20px;
+  font-size: 1.6rem;
+  font-weight: 800;
+}
+
+.aba-tela__titulo:focus {
+  outline: none;
+}
+
+.aba-tela__titulo + .aba-tela__nota {
+  margin: -12px 0 20px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
 }
 
 .topo__titulo {
@@ -95,7 +178,7 @@ body {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 12px;
-  margin-block: 24px;
+  margin-bottom: 28px;
 }
 
 .numero {
@@ -107,10 +190,20 @@ body {
 
 .numero__valor {
   display: block;
-  font-size: 1.6rem;
-  font-weight: 800;
-  color: var(--accent);
+  font-size: 1.4rem;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
+}
+
+/* O total da lista é o número principal: ganha o destaque */
+.numero:first-child {
+  border-color: rgb(79 195 247 / 0.35);
+}
+
+.numero:first-child .numero__valor {
+  color: var(--accent);
+  font-size: 1.7rem;
+  font-weight: 800;
 }
 
 .numero__rotulo {
@@ -145,13 +238,21 @@ body {
   align-items: center;
 }
 
+/* Filtros de status: o fundo azul do ativo é uma pílula que desliza entre eles */
 .abas {
+  position: relative;
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
 }
 
+.abas__pilula {
+  background: var(--accent);
+}
+
 .aba {
+  position: relative;
+  z-index: 1;
   background: transparent;
   border: 1px solid var(--border);
   border-radius: 999px;
@@ -160,18 +261,23 @@ body {
   font: inherit;
   font-size: 0.85rem;
   padding: 6px 14px;
+  transition:
+    color 0.25s,
+    background-color 0.25s,
+    border-color 0.25s;
 }
 
 .aba:hover {
   background: var(--surface-hover);
+  color: var(--text);
 }
 
-/* O :hover também aqui: sem isso, o fundo escuro do .aba:hover vencia
+/* O :hover também aqui: sem isso, o fundo escuro do .aba:hover tampava a pílula
    e o texto (escuro) da aba ativa sumia com o mouse em cima dela. */
 .aba--ativa,
 .aba--ativa:hover {
-  background: var(--accent);
-  border-color: var(--accent);
+  background: transparent;
+  border-color: transparent;
   color: var(--bg);
   font-weight: 600;
 }
@@ -205,6 +311,46 @@ body {
   font: inherit;
   font-weight: 600;
   padding: 10px 18px;
+  transition:
+    background-color 0.2s,
+    color 0.2s,
+    transform 0.2s,
+    box-shadow 0.2s;
+}
+
+/* Botão principal com movimento (o mesmo do "Ver projetos" do portfólio) */
+.botao--vivo:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgb(79 195 247 / 0.35);
+}
+
+/* Botão só com ícone (a lixeira do cartão) */
+.botao-icone {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    border-color 0.2s,
+    color 0.2s;
+}
+
+.botao-icone:hover {
+  background: var(--surface-hover);
+  border-color: var(--border);
+  color: var(--perigo);
+}
+
+.botao-icone:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
 }
 
 .botao:hover {
@@ -255,14 +401,39 @@ body {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
+  transition:
+    transform 0.35s var(--ease-out),
+    border-color 0.35s,
+    box-shadow 0.35s;
+}
+
+/* O cartão salta ao passar o mouse (ou com o foco dentro dele), como no portfólio */
+.cartao:hover,
+.cartao:focus-within {
+  transform: translateY(-4px);
+  border-color: #3a3d44;
+  box-shadow: 0 18px 40px rgb(0 0 0 / 0.35);
+}
+
+/* A moldura arredonda e recorta a capa (o cartão não pode ter overflow: hidden,
+   senão cortaria o brilho da borda) */
+.cartao__moldura {
   overflow: hidden;
+  border-radius: calc(var(--radius) - 1px) calc(var(--radius) - 1px) 0 0;
 }
 
 .cartao__capa {
+  display: block;
   width: 100%;
   aspect-ratio: 3 / 4;
   object-fit: cover;
   background: var(--surface-hover);
+  transition: transform 0.6s var(--ease-out);
+}
+
+/* E a capa chega um pouco mais perto */
+.cartao:hover .cartao__capa {
+  transform: scale(1.04);
 }
 
 .cartao__corpo {
@@ -342,7 +513,6 @@ body {
 
 .cartao__acoes {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
@@ -545,6 +715,7 @@ body {
 
 .mensagem {
   position: fixed;
+  z-index: 20;
   bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
@@ -569,6 +740,14 @@ body {
 
   .topo__titulo {
     font-size: 1.2rem;
+  }
+
+  .aba-tela__titulo {
+    font-size: 1.35rem;
+  }
+
+  #filtro-titulo {
+    flex: 1 1 100%;
   }
 
   /* Cartões estreitos: rótulo em cima, campo embaixo ocupando a largura toda */
@@ -599,5 +778,135 @@ body {
 
   .franquia {
     padding: 10px;
+  }
+}
+
+/* ---------- Animações (as mesmas do portfólio) ---------- */
+
+/* Entrada da aba: cada bloco sobe 10px e aparece; o título em 0,1 s, o conteúdo
+   principal em 0,3 s e o resto em 0,5 s (data-grupo 0, 1 e 2). "translate" e não
+   "transform", para não brigar com o salto dos cartões. */
+.com-abas .reveal {
+  opacity: 0;
+}
+
+.aba-tela--entrando .reveal {
+  animation: surgir 0.5s var(--ease-texto) calc(0.1s + var(--grupo, 0) * 0.2s) both;
+}
+
+.reveal[data-grupo="0"] { --grupo: 0; }
+.reveal[data-grupo="1"] { --grupo: 1; }
+.reveal[data-grupo="2"] { --grupo: 2; }
+
+@keyframes surgir {
+  from {
+    opacity: 0;
+    translate: 0 10px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Saída da aba anterior: some num fade rápido */
+.aba-tela--saindo {
+  animation: sair 0.15s ease-out both;
+}
+
+@keyframes sair {
+  to {
+    opacity: 0;
+  }
+}
+
+/* As barras de progresso enchem quando a aba aparece (não a cada atualização) */
+.animar-barras .progresso__barra {
+  transform-origin: left;
+  animation: crescer 0.8s var(--ease-out) 0.5s both;
+}
+
+@keyframes crescer {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+/* Brilho que segue o mouse (.spot; posição em --mx/--my, definida no app.js):
+   uma luz suave no fundo e outra acendendo a borda perto do cursor */
+.spot {
+  position: relative;
+  isolation: isolate;
+}
+
+.spot::before,
+.spot::after {
+  content: "";
+  position: absolute;
+  border-radius: inherit;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s;
+}
+
+.spot::before {
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(380px circle at var(--mx, 50%) var(--my, 50%), rgb(79 195 247 / 0.07), transparent 60%);
+}
+
+.spot::after {
+  inset: -1px;
+  padding: 1px;
+  z-index: 2;
+  background: radial-gradient(220px circle at var(--mx, 50%) var(--my, 50%), rgb(79 195 247 / 0.55), transparent 70%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+@media (hover: hover) {
+  .spot:hover::before,
+  .spot:hover::after {
+    opacity: 1;
+  }
+}
+
+/* Quem prefere menos animação (ex.: "Efeitos de animação" desligado no Windows):
+   nada se desloca nem cresce, mas a troca de abas mantém um fade simples */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .com-abas .reveal {
+    opacity: 1;
+  }
+
+  .aba-tela--entrando .reveal {
+    animation: aparecer 0.5s ease-out calc(0.1s + var(--grupo, 0) * 0.2s) both !important;
+  }
+
+  .aba-tela--saindo {
+    animation: sair 0.15s ease-out both !important;
+  }
+
+  .cartao:hover,
+  .cartao:focus-within,
+  .cartao:hover .cartao__capa,
+  .botao--vivo:hover:not(:disabled) {
+    transform: none;
   }
 }
