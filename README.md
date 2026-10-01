@@ -20,7 +20,8 @@ API REST em Python com **FastAPI** para organizar sua lista de animes: o que voc
 - **Temporadas juntas:** no MyAnimeList, cada temporada é um anime separado. Ao adicionar, a API vê na Jikan qual é a temporada anterior e a seguinte, e as temporadas da mesma franquia ficam num quadro só ("Temporada 1", "Temporada 2", "Filme"...). O botão **Outras temporadas** mostra as que faltam e adiciona com um clique.
 - **Comentários:** cada anime tem um histórico de anotações com data, e cada uma pode dizer o episódio ("ep. 7: que luta!").
 - **Duas abas:** **Minha lista** e **Adicionar**, cada uma com endereço próprio (`/#adicionar`), com as mesmas animações do [portfólio](https://lakes777.github.io).
-- **Filtros:** abas por status e busca por parte do título.
+- **Filtros e ordem:** abas por status, busca por parte do título e ordem (adicionados por último ou primeiro, título ou maior nota), sem separar as temporadas da mesma franquia. A ordem escolhida fica guardada no navegador.
+- **Sinopse e gêneros:** clicar na capa mostra a sinopse, os gêneros e a nota do MyAnimeList, com link para a página do anime.
 - **Estatísticas:** total de animes, quantos por status, episódios assistidos e nota média.
 - **Documentação automática:** todas as rotas podem ser testadas no navegador em `/docs`.
 - **Funciona no celular:** o layout se adapta a telas pequenas.
@@ -139,7 +140,8 @@ lista-animes/
 
 - [x] Publicar online, com um link para abrir de qualquer lugar
 - [ ] Contas de usuário, para cada pessoa ter a sua lista
-- [ ] Ordenar a lista (por nota, título ou data)
-- [ ] Guardar a sinopse e os gêneros e mostrar os detalhes ao clicar no cartão
+- [x] Ordenar a lista (por nota, título ou data)
+- [x] Mostrar a sinopse e os gêneros ao clicar na capa
+- [ ] Guardar a sinopse e os gêneros no banco (hoje são buscados na hora, na Jikan)
 - [ ] Exportar e importar a lista (JSON ou a partir do MyAnimeList)
 - [ ] Se a busca por nome da Jikan falhar, tentar outra fonte (ex.: AniList)

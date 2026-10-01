@@ -2,12 +2,36 @@
 // Todo texto vindo da API entra na página com textContent, que não interpreta HTML,
 // então um título como "<script>..." aparece como texto e não é executado.
 
+// A ordem escolhida fica guardada só neste navegador. localStorage pode não existir
+// (janela anônima, armazenamento bloqueado): aí vale a ordem padrão.
+const ORDENS = ["recentes", "antigos", "titulo", "nota"];
+
+function lerOrdemSalva() {
+  try {
+    const salva = localStorage.getItem("lista-animes:ordem");
+    return ORDENS.includes(salva) ? salva : "recentes";
+  } catch {
+    return "recentes";
+  }
+}
+
+function salvarOrdem(ordem) {
+  try {
+    localStorage.setItem("lista-animes:ordem", ordem);
+  } catch {
+    // sem armazenamento: a escolha vale só até recarregar a página
+  }
+}
+
 const estado = {
   status: "",
   busca: "",
   malIdsNaLista: new Set(),
   franquias: new Map(), // número da franquia -> temporadas dela (da lista completa)
   rotulos: new Map(), // id do anime -> "Temporada 2", "Filme"...
+  ordem: lerOrdemSalva(),
+  detalhes: new Map(), // mal_id -> dados do catálogo (para não pedir à Jikan de novo)
+  detalhesDe: null, // mal_id aberto na janela de detalhes
   animeComentado: null,
   temporadasDe: null, // anime cujas outras temporadas estão abertas na janela
 };
@@ -134,12 +158,73 @@ function escolherEpisodio(anime, campo) {
   }, 700);
 }
 
-function preencherCapa(img, anime) {
-  if (anime.imagem_url) {
-    img.src = anime.imagem_url;
+// A capa fica dentro de um botão que abre os detalhes; o nome vai no botão (aria-label),
+// então a imagem não precisa de texto alternativo próprio.
+function preencherCapa(cartao, anime, abrir) {
+  const img = cartao.querySelector(".cartao__capa");
+  if (anime.imagem_url) img.src = anime.imagem_url;
+  else img.removeAttribute("src");
+  const botao = cartao.querySelector('[data-acao="detalhes"]');
+  if (anime.mal_id === null) {
+    // Anime cadastrado à mão: não há o que buscar no MyAnimeList. A capa vira só imagem.
+    botao.disabled = true;
     img.alt = `Capa de ${anime.titulo}`;
-  } else {
-    img.removeAttribute("src");
+    return;
+  }
+  botao.setAttribute("aria-label", `Ver sinopse e detalhes de ${anime.titulo}`);
+  botao.title = "Ver sinopse e detalhes";
+  botao.addEventListener("click", abrir);
+}
+
+// ---------- Detalhes (sinopse e gêneros do MyAnimeList) ----------
+
+function mostrarDetalhes(dados) {
+  const info = [
+    dados.tipo,
+    dados.ano,
+    dados.total_episodios && `${dados.total_episodios} eps.`,
+    dados.nota_mal && `nota ${dados.nota_mal.toLocaleString("pt-BR")} no MAL`,
+  ].filter(Boolean);
+  $("#detalhes-info").textContent = info.join(" · ");
+  $("#detalhes-generos").replaceChildren(
+    ...dados.generos.map((genero) => {
+      const item = document.createElement("li");
+      item.textContent = genero;
+      return item;
+    }),
+  );
+  $("#detalhes-sinopse").textContent = dados.sinopse || "Sem sinopse no MyAnimeList.";
+  const link = $("#detalhes-link");
+  link.href = `https://myanimelist.net/anime/${dados.mal_id}`;
+  link.hidden = false;
+}
+
+// dados: o anime do catálogo, quando já se tem (resultado da busca); senão, pede à API.
+async function abrirDetalhes(anime, dados = null) {
+  const malId = anime.mal_id;
+  estado.detalhesDe = malId;
+  if (dados) estado.detalhes.set(malId, dados);
+  $("#detalhes-titulo").textContent = anime.titulo;
+  $("#detalhes-info").textContent = "";
+  $("#detalhes-generos").replaceChildren();
+  $("#detalhes-sinopse").textContent = "";
+  $("#detalhes-link").hidden = true;
+  $("#dialogo-detalhes").showModal();
+
+  const guardado = estado.detalhes.get(malId);
+  if (guardado) {
+    mostrarAviso($("#aviso-detalhes"), "");
+    return mostrarDetalhes(guardado);
+  }
+  mostrarAviso($("#aviso-detalhes"), "Buscando no MyAnimeList...");
+  try {
+    const encontrado = await api(`/catalogo/${malId}`);
+    estado.detalhes.set(malId, encontrado);
+    if (estado.detalhesDe !== malId) return; // a pessoa já abriu outro anime
+    mostrarAviso($("#aviso-detalhes"), "");
+    mostrarDetalhes(encontrado);
+  } catch (erro) {
+    if (estado.detalhesDe === malId) mostrarAviso($("#aviso-detalhes"), erro.message);
   }
 }
 
@@ -235,7 +320,7 @@ function abrirTemporadas(anime, nome) {
 
 function criarCartaoAnime(anime) {
   const cartao = $("#molde-anime").content.firstElementChild.cloneNode(true);
-  preencherCapa(cartao.querySelector(".cartao__capa"), anime);
+  preencherCapa(cartao, anime, () => abrirDetalhes(anime));
   cartao.querySelector(".cartao__titulo").textContent = anime.titulo;
 
   const rotulo = estado.rotulos.get(anime.id);
@@ -293,18 +378,19 @@ async function carregarLista() {
   if (estado.busca) parametros.set("busca", estado.busca);
 
   const animes = await api(`/animes?${parametros}`);
-  // Junta as temporadas da mesma franquia num quadro (elas já vêm uma depois da outra).
-  const elementos = [];
+  // Junta as temporadas da mesma franquia num grupo (elas já vêm uma depois da outra).
+  const grupos = [];
   for (let i = 0; i < animes.length; ) {
     const visiveis = [animes[i]];
     while (animes[i + visiveis.length]?.franquia === animes[i].franquia) {
       visiveis.push(animes[i + visiveis.length]);
     }
     i += visiveis.length;
-    const temporadas = estado.franquias.get(visiveis[0].franquia) ?? visiveis;
-    if (temporadas.length > 1) elementos.push(criarFranquia(temporadas, visiveis));
-    else elementos.push(...visiveis.map(criarCartaoAnime));
+    grupos.push({ visiveis, temporadas: estado.franquias.get(visiveis[0].franquia) ?? visiveis });
   }
+  const elementos = ordenarGrupos(grupos).flatMap(({ visiveis, temporadas }) =>
+    temporadas.length > 1 ? [criarFranquia(temporadas, visiveis)] : visiveis.map(criarCartaoAnime),
+  );
   $("#lista").replaceChildren(...elementos);
 
   let aviso = "";
@@ -315,6 +401,24 @@ async function carregarLista() {
       : "Sua lista está vazia. Busque um anime na aba Adicionar e clique em + Adicionar.";
   }
   mostrarAviso($("#aviso-lista"), aviso);
+}
+
+// A ordem vale para os grupos: as temporadas de uma franquia continuam juntas, na ordem de estreia.
+// A API manda os grupos na ordem em que foram adicionados (é a ordem "antigos").
+const porTitulo = new Intl.Collator("pt-BR", { sensitivity: "base", numeric: true });
+
+function ordenarGrupos(grupos) {
+  const titulo = (grupo) => grupo.temporadas[0].titulo;
+  const ultimoAdicionado = (grupo) => Math.max(...grupo.temporadas.map((a) => a.id));
+  const melhorNota = (grupo) => Math.max(0, ...grupo.visiveis.map((a) => a.nota ?? 0));
+  const comparar = {
+    antigos: () => 0, // sort() é estável: fica a ordem da API
+    recentes: (a, b) => ultimoAdicionado(b) - ultimoAdicionado(a),
+    titulo: (a, b) => porTitulo.compare(titulo(a), titulo(b)),
+    // Sem nota vai para o fim; empate desempata pelo título.
+    nota: (a, b) => melhorNota(b) - melhorNota(a) || porTitulo.compare(titulo(a), titulo(b)),
+  }[estado.ordem];
+  return [...grupos].sort(comparar);
 }
 
 async function atualizarTudo() {
@@ -430,7 +534,7 @@ function fecharAoClicarFora(evento) {
 function criarCartaoCatalogo(anime) {
   const cartao = $("#molde-catalogo").content.firstElementChild.cloneNode(true);
   cartao.dataset.malId = anime.mal_id;
-  preencherCapa(cartao.querySelector(".cartao__capa"), anime);
+  preencherCapa(cartao, anime, () => abrirDetalhes(anime, anime));
   cartao.querySelector(".cartao__titulo").textContent = anime.titulo;
 
   const info = [
@@ -634,6 +738,12 @@ async function mostrarAvisoDemo() {
 $("#form-catalogo").addEventListener("submit", buscarNoCatalogo);
 $("#abas").addEventListener("click", escolherAba);
 $("#filtro-titulo").addEventListener("input", filtrarPorTitulo);
+$("#ordem").value = estado.ordem;
+$("#ordem").addEventListener("change", (evento) => {
+  estado.ordem = evento.target.value;
+  salvarOrdem(estado.ordem);
+  carregarLista().catch((erro) => mostrarMensagem(erro.message, true));
+});
 $("#form-comentario").addEventListener("submit", enviarComentario);
 for (const dialogo of document.querySelectorAll("dialog")) {
   dialogo.addEventListener("click", fecharAoClicarFora);

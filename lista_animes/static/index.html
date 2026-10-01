@@ -52,8 +52,18 @@
             <button class="aba" data-status="concluido" role="tab" aria-selected="false">Concluídos</button>
             <button class="aba" data-status="abandonado" role="tab" aria-selected="false">Abandonados</button>
           </div>
-          <input class="campo campo--pequeno" id="filtro-titulo" type="search"
-                 placeholder="Filtrar por título" maxlength="100" aria-label="Filtrar por título">
+          <div class="filtros__direita">
+            <label class="ordem">Ordenar
+              <select class="campo campo--pequeno" id="ordem">
+                <option value="recentes">Adicionados por último</option>
+                <option value="antigos">Adicionados primeiro</option>
+                <option value="titulo">Título (A a Z)</option>
+                <option value="nota">Maior nota</option>
+              </select>
+            </label>
+            <input class="campo campo--pequeno" id="filtro-titulo" type="search"
+                   placeholder="Filtrar por título" maxlength="100" aria-label="Filtrar por título">
+          </div>
         </div>
         <p class="aviso" id="aviso-lista" hidden></p>
         <div class="grade" id="lista"></div>
@@ -81,7 +91,7 @@
   <!-- Moldes dos cartões: o app.js copia e preenche com textContent (nunca innerHTML) -->
   <template id="molde-catalogo">
     <article class="cartao spot">
-      <div class="cartao__moldura"><img class="cartao__capa" alt="" loading="lazy"></div>
+      <button class="cartao__moldura" type="button" data-acao="detalhes"><img class="cartao__capa" alt="" loading="lazy"></button>
       <div class="cartao__corpo">
         <h3 class="cartao__titulo"></h3>
         <p class="cartao__info"></p>
@@ -93,7 +103,7 @@
 
   <template id="molde-anime">
     <article class="cartao spot">
-      <div class="cartao__moldura"><img class="cartao__capa" alt="" loading="lazy"></div>
+      <button class="cartao__moldura" type="button" data-acao="detalhes"><img class="cartao__capa" alt="" loading="lazy"></button>
       <div class="cartao__corpo">
         <p class="cartao__temporada" hidden></p>
         <h3 class="cartao__titulo"></h3>
@@ -195,6 +205,21 @@
     </div>
     <p class="aviso" id="aviso-temporadas" hidden></p>
     <ul class="temporadas" id="lista-temporadas"></ul>
+  </dialog>
+
+  <!-- Detalhes do anime no MyAnimeList (abre ao clicar na capa) -->
+  <dialog class="dialogo" id="dialogo-detalhes" aria-labelledby="detalhes-titulo">
+    <div class="dialogo__topo">
+      <div>
+        <h2 class="dialogo__titulo" id="detalhes-titulo"></h2>
+        <p class="dialogo__subtitulo" id="detalhes-info"></p>
+      </div>
+      <button class="botao botao--pequeno botao--fantasma" type="button" data-fechar>Fechar</button>
+    </div>
+    <p class="aviso" id="aviso-detalhes" hidden></p>
+    <ul class="generos" id="detalhes-generos"></ul>
+    <p class="detalhes__sinopse" id="detalhes-sinopse"></p>
+    <a class="detalhes__link" id="detalhes-link" target="_blank" rel="noopener" hidden>Ver no MyAnimeList</a>
   </dialog>
 
   <div class="mensagem" id="mensagem" role="status" hidden></div>
