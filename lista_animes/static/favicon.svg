@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+  <!-- Televisão do Lucide (tv, licença ISC) em grafite sobre o azul de destaque, o mesmo ícone do card no portfólio. -->
+  <rect width="32" height="32" rx="7" fill="#4fc3f7"/>
+  <g transform="translate(4 4)" fill="none" stroke="#0d0e10" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m17 2-5 5-5-5"/>
+    <rect width="20" height="15" x="2" y="7" rx="2"/>
+  </g>
+</svg>
