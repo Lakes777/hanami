@@ -1,4 +1,4 @@
-// Front da Lista de Animes: conversa com a própria API usando fetch().
+// Front do Hanami: conversa com a própria API usando fetch().
 // Todo texto vindo da API entra na página com textContent, que não interpreta HTML,
 // então um título como "<script>..." aparece como texto e não é executado.
 
@@ -813,7 +813,7 @@ async function importarBackup(evento) {
   }
   // Confere antes de enviar: assim a mensagem é clara, e não um erro de validação em inglês.
   if (lista?.formato !== "lista-animes" || !Array.isArray(lista.animes)) {
-    return mostrarMensagem("Esse arquivo não é um backup da Lista de Animes.", true);
+    return mostrarMensagem("Esse arquivo não é um backup do Hanami.", true);
   }
   try {
     const r = await api("/animes/importar", { method: "POST", body: JSON.stringify(lista) });
@@ -893,7 +893,7 @@ function mostrarAba(focar) {
   moverPilula($("#menu-pilula"), $(".menu__link--ativo"));
   const titulo = atual.querySelector(".aba-tela__titulo");
   const noInicio = atual.id === "inicio";
-  document.title = noInicio ? "Lista de Animes" : `${titulo.textContent} | Lista de Animes`;
+  document.title = noInicio ? "Hanami" : `${titulo.textContent} | Hanami`;
 
   const anterior = abasIniciadas && telas.find((tela) => !tela.hidden && tela !== atual);
   const estaTroca = ++trocaAtual;

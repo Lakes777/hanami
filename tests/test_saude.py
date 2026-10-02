@@ -14,7 +14,7 @@ def test_pagina_inicial_mostra_o_front(cliente):
 
     assert resposta.status_code == 200
     assert resposta.headers["content-type"].startswith("text/html")
-    assert "<title>Lista de Animes</title>" in resposta.text
+    assert "<title>Hanami</title>" in resposta.text
 
 
 def test_arquivos_do_front_sao_servidos(cliente):

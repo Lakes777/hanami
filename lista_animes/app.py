@@ -34,7 +34,7 @@ def criar_app(
     caminho_banco: Path | str, catalogo: Catalogo | None = None, demo: bool = False
 ) -> FastAPI:
     app = FastAPI(
-        title="Lista de Animes",
+        title="Hanami",
         description="Sua lista de animes: o que quer ver, o que está vendo e o que já viu.",
         version="0.1.0",
     )

@@ -1,8 +1,8 @@
-# Lista de Animes
+# Hanami
 
 [![Testes](https://github.com/Lakes777/lista-animes/actions/workflows/testes.yml/badge.svg)](https://github.com/Lakes777/lista-animes/actions/workflows/testes.yml)
 
-API REST em Python com **FastAPI** para organizar sua lista de animes: o que você quer ver, o que está vendo e o que já viu. Os dados dos animes (título, episódios e capa) vêm da [Jikan](https://jikan.moe), uma API gratuita com o catálogo do **MyAnimeList**. A própria API também entrega um front em HTML, CSS e JavaScript puros.
+**Hanami · lista de animes.** API REST em Python com **FastAPI** para organizar sua lista de animes: o que você quer ver, o que está vendo e o que já viu. Os dados dos animes (título, episódios e capa) vêm da [Jikan](https://jikan.moe), uma API gratuita com o catálogo do **MyAnimeList**. A própria API também entrega um front em HTML, CSS e JavaScript puros.
 
 ### [Ver ao vivo](https://lista-animes-b8ql.onrender.com)
 
@@ -29,7 +29,7 @@ API REST em Python com **FastAPI** para organizar sua lista de animes: o que voc
 - **Funciona no celular:** o layout se adapta a telas pequenas.
 
 <p align="center">
-  <img src="docs/celular.jpg" alt="Lista de Animes numa tela de celular: as abas Minha lista e Adicionar, as estatísticas, os filtros de status e os cartões com capa, status, episódios, o botão +1 ep. e os ícones de comentar, editar, temporadas e remover" width="260">
+  <img src="docs/celular.jpg" alt="Hanami numa tela de celular: as abas Minha lista e Adicionar, as estatísticas, os filtros de status e os cartões com capa, status, episódios, o botão +1 ep. e os ícones de comentar, editar, temporadas e remover" width="260">
 </p>
 
 ## Rotas da API
