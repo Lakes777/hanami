@@ -229,8 +229,14 @@ body {
   margin-bottom: 16px;
 }
 
+/* O campo e o botão Buscar ficam lado a lado até no celular */
+.busca {
+  flex-wrap: nowrap;
+}
+
 .busca .campo {
-  flex: 1 1 240px;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .filtros {
@@ -339,18 +345,23 @@ body {
   box-shadow: 0 8px 24px rgb(79 195 247 / 0.35);
 }
 
-/* Botão só com ícone (a lixeira do cartão) */
+/* Botão só com ícone (ações secundárias do cartão) */
 .botao-icone {
-  display: inline-grid;
-  place-items: center;
-  width: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 32px;
   height: 32px;
-  padding: 0;
+  padding: 0 6px;
   background: transparent;
   border: 1px solid transparent;
   border-radius: 8px;
   color: var(--text-muted);
   cursor: pointer;
+  font: inherit;
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
   transition:
     background-color 0.2s,
     border-color 0.2s,
@@ -360,12 +371,20 @@ body {
 .botao-icone:hover {
   background: var(--surface-hover);
   border-color: var(--border);
+  color: var(--text);
+}
+
+.botao-icone--perigo:hover {
   color: var(--perigo);
 }
 
 .botao-icone:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
+}
+
+.botao-icone[hidden] {
+  display: none;
 }
 
 .botao:hover {
@@ -387,6 +406,40 @@ body {
   background: transparent;
   border: 1px solid var(--border);
   color: var(--text);
+}
+
+.botao--fantasma:hover {
+  background: var(--surface-hover);
+}
+
+/* Ação principal do cartão (+1 ep.): azul, mas sem pesar como um botão cheio */
+.botao--suave {
+  background: rgb(79 195 247 / 0.12);
+  border: 1px solid rgb(79 195 247 / 0.35);
+  color: var(--accent);
+}
+
+.botao--suave:hover:not(:disabled) {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+.botao--suave:disabled {
+  background: transparent;
+  border-color: var(--border);
+  color: var(--text-muted);
+}
+
+.botao--icone-texto {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.botao:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .botao--perigo {
@@ -476,73 +529,156 @@ body {
 }
 
 
+/* Capa e o que fica por cima dela (nota e temporadas da franquia) */
+.cartao__midia {
+  position: relative;
+}
+
 .cartao__corpo {
   display: flex;
   flex: 1;
   flex-direction: column;
-  gap: 8px;
-  padding: 12px 14px 14px;
+  gap: 10px;
+  padding: 12px 14px 10px;
 }
 
+/* Título com no máximo 2 linhas e sempre a altura de 2 linhas: os cartões da mesma
+   linha ficam com o status, os episódios e as ações na mesma altura */
 .cartao__titulo {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  min-height: calc(2 * 1.3em);
   margin: 0;
   overflow-wrap: anywhere; /* título sem espaços não vaza para o cartão vizinho */
   font-size: 1rem;
   line-height: 1.3;
 }
 
-.cartao__temporada {
-  margin: 0 0 -4px;
-  color: var(--accent);
-  font-size: 0.75rem;
+/* Selo da nota no canto da capa */
+.cartao__nota {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  background: rgb(13 14 16 / 0.82);
+  border: 1px solid rgb(255 255 255 / 0.08);
+  border-radius: 999px;
+  color: var(--text);
+  font-size: 0.8rem;
   font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
 }
 
-.cartao__link {
+.cartao__nota[hidden] {
+  display: none;
+}
+
+.cartao__nota svg {
+  color: var(--accent);
+  fill: currentColor;
+}
+
+/* Status: um select compacto que também mostra o estado pela cor */
+.cartao__status {
   align-self: flex-start;
-  padding: 0;
-  background: none;
-  border: none;
+  max-width: 100%;
+  padding-block: 4px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+}
+
+.cartao__status[data-status="assistindo"] {
+  border-color: rgb(79 195 247 / 0.45);
+  color: var(--accent);
+}
+
+.cartao__status[data-status="quero_ver"] {
   color: var(--text-muted);
+}
+
+.cartao__status[data-status="abandonado"] {
+  color: var(--perigo);
+}
+
+.cartao__status option {
+  color: var(--text);
+}
+
+/* ---------- Franquias: um cartão só, as temporadas viram botões sobre a capa ---------- */
+.cartao__temporadas {
+  position: absolute;
+  inset: auto 0 0;
+  z-index: 3;
+  display: flex;
+  gap: 4px;
+  overflow-x: auto; /* muitas temporadas: rolam dentro da capa, nunca a página */
+  padding: 28px 8px 8px;
+  background: linear-gradient(transparent, rgb(13 14 16 / 0.9));
+  scrollbar-width: none;
+}
+
+.temporada-botao {
+  flex-shrink: 0;
+  padding: 3px 10px;
+  background: rgb(13 14 16 / 0.75);
+  border: 1px solid rgb(255 255 255 / 0.14);
+  border-radius: 999px;
+  color: var(--text);
   cursor: pointer;
   font: inherit;
-  font-size: 0.8rem;
-  text-decoration: underline;
-  text-underline-offset: 2px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  transition:
+    background-color 0.2s,
+    color 0.2s,
+    border-color 0.2s;
 }
 
-.cartao__link:hover {
-  color: var(--accent);
+.temporada-botao:hover {
+  border-color: var(--accent);
 }
 
-/* ---------- Franquias (temporadas juntas) ---------- */
-.franquia {
-  grid-column: 1 / -1; /* ocupa a linha inteira da grade */
-  padding: 14px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+.temporada-botao[aria-pressed="true"] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg);
 }
 
-.franquia__topo {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 12px;
+.temporada-botao:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 1px;
 }
 
-.franquia__titulo {
-  margin: 0;
-  font-size: 1.05rem;
+/* Uma "pilha" de cartões atrás: avisa que há mais de uma temporada */
+.cartao--franquia {
+  box-shadow:
+    5px 5px 0 -1px var(--surface),
+    5px 5px 0 0 var(--border);
 }
 
-.franquia__info {
-  margin: 2px 0 0;
-  color: var(--text-muted);
-  font-size: 0.85rem;
+/* Ao saltar, a pilha continua atrás junto com a sombra */
+.cartao--franquia:has(:focus-visible) {
+  box-shadow:
+    5px 5px 0 -1px var(--surface),
+    5px 5px 0 0 #3a3d44,
+    0 18px 40px rgb(0 0 0 / 0.35);
+}
+
+@media (hover: hover) {
+  .cartao--franquia:hover {
+    box-shadow:
+      5px 5px 0 -1px var(--surface),
+      5px 5px 0 0 #3a3d44,
+      0 18px 40px rgb(0 0 0 / 0.35);
+  }
 }
 
 .cartao__info,
@@ -552,13 +688,39 @@ body {
   font-size: 0.85rem;
 }
 
+.cartao__generos {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  overflow: hidden;
+}
+
+/* O botão Adicionar fica sempre no pé do cartão */
+.cartao__adicionar {
+  margin-top: auto;
+  width: 100%;
+}
+
+.cartao__adicionar--na-lista:disabled {
+  opacity: 1;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+/* Ações secundárias: uma linha de ícones no pé do cartão, separada por um fio */
 .cartao__acoes {
   display: flex;
-  flex-wrap: wrap; /* cartão estreito: a lixeira desce em vez de espremer o botão */
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-top: auto;
+  gap: 2px;
+  margin: auto -6px 0;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.cartao__acoes [data-acao="remover"] {
+  margin-left: auto;
 }
 
 .rotulo {
@@ -576,35 +738,64 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 6px;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   font-variant-numeric: tabular-nums;
 }
 
 .episodios__texto {
-  display: flex;
-  align-items: center;
-  gap: 5px;
   color: var(--text-muted);
-}
-
-.episodios__total {
   white-space: nowrap;
 }
 
+.episodios__texto strong {
+  color: var(--text);
+  font-size: 1rem;
+}
+
 .campo--numero {
-  width: 4.8em;
-  padding-inline: 6px;
+  width: 5.5em;
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-/* O botão nunca quebra em "+1" / "ep." nos cartões estreitos (dentro das franquias) */
+/* O botão nunca quebra em "+1" / "ep." */
 .episodios .botao {
   white-space: nowrap;
 }
 
-.cartao__acoes .botao {
+/* ---------- Janela de edição ---------- */
+.dialogo--estreito {
+  width: min(420px, 100% - 32px);
+}
+
+.editar {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.editar .rotulo {
+  color: var(--text);
+  font-size: 0.92rem;
+}
+
+.editar select {
+  min-width: 11em;
+}
+
+.editar__episodios {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
   white-space: nowrap;
+}
+
+.editar__botoes {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 4px;
 }
 
 .progresso {
@@ -772,10 +963,6 @@ body {
   text-decoration: none;
 }
 
-.backup .botao--fantasma:hover {
-  background: var(--surface-hover);
-}
-
 /* O <input type="file"> fica escondido; o foco do teclado aparece no botão em volta dele */
 .arquivo:focus-within {
   outline: 2px solid var(--accent);
@@ -893,34 +1080,48 @@ body {
     flex: 1;
   }
 
-  /* Cartões estreitos: rótulo em cima, campo embaixo ocupando a largura toda */
-  .rotulo {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 4px;
+  /* Estatísticas: o total ocupa a linha de cima, os outros 4 ficam 2 a 2 */
+  .estatisticas {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-bottom: 22px;
   }
 
-  .episodios {
-    flex-wrap: wrap;
-    gap: 6px;
+  .numero:first-child {
+    grid-column: 1 / -1;
   }
 
+  .numero {
+    padding: 10px 14px;
+  }
+
+  .cartao__corpo {
+    gap: 8px;
+    padding: 10px 10px 8px;
+  }
+
+  .cartao__titulo {
+    font-size: 0.95rem;
+  }
+
+  .cartao__status {
+    align-self: stretch;
+  }
+
+  /* Cartão estreito: o +1 ep. ocupa a largura toda, fácil de tocar */
   .episodios .botao {
     width: 100%;
   }
 
-  .episodios .campo--numero {
-    width: 3.8em;
+  .cartao__acoes {
+    margin-inline: -4px;
   }
 
-  /* Cartão muito estreito: o "/ 28 eps." desce para baixo do campo */
-  .episodios__texto {
-    flex-wrap: wrap;
-    row-gap: 2px;
-  }
-
-  .franquia {
-    padding: 10px;
+  /* Na janela de edição, rótulo em cima e campo embaixo */
+  .editar .rotulo {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
   }
 }
 

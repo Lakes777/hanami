@@ -34,24 +34,46 @@ const estado = {
   detalhesDe: null, // mal_id aberto na janela de detalhes
   animeComentado: null,
   temporadasDe: null, // anime cujas outras temporadas estão abertas na janela
+  animeEditado: null, // anime aberto na janela "Editar"
+  temporadaEscolhida: new Map(), // número da franquia -> id da temporada mostrada no cartão
 };
 
 const $ = (seletor) => document.querySelector(seletor);
 
-// Lixeira da Lucide (lucide.dev, licença ISC), montada elemento por elemento (nada de HTML em texto).
-function iconeLixeira() {
+// Ícones da Lucide (lucide.dev, licença ISC), montados elemento por elemento (nada de HTML em texto).
+const ICONES = {
+  lixeira: ["M3 6h18", "M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6", "M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2",
+    "M10 11v6", "M14 11v6"],
+  comentario: ["M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"],
+  lapis: ["M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z",
+    "m15 5 4 4"],
+  camadas: ["M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z",
+    "M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12",
+    "M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17"],
+  mais: ["M5 12h14", "M12 5v14"],
+  certo: ["M20 6 9 17l-5-5"],
+  estrela: ["M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"],
+};
+
+function icone(nome, tamanho = 18) {
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  for (const [nome, valor] of Object.entries({
-    viewBox: "0 0 24 24", width: "18", height: "18", fill: "none", stroke: "currentColor",
+  for (const [atributo, valor] of Object.entries({
+    viewBox: "0 0 24 24", width: tamanho, height: tamanho, fill: "none", stroke: "currentColor",
     "stroke-width": "2", "stroke-linecap": "round", "stroke-linejoin": "round", "aria-hidden": "true",
-  })) svg.setAttribute(nome, valor);
-  for (const d of ["M3 6h18", "M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6", "M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2",
-    "M10 11v6", "M14 11v6"]) {
+  })) svg.setAttribute(atributo, valor);
+  for (const d of ICONES[nome]) {
     const caminho = document.createElementNS("http://www.w3.org/2000/svg", "path");
     caminho.setAttribute("d", d);
     svg.append(caminho);
   }
   return svg;
+}
+
+// Botão só de ícone: o texto vai no aria-label (leitor de tela) e no title (dica do mouse).
+function prepararBotaoIcone(botao, nome, rotulo, dica = rotulo) {
+  botao.prepend(icone(nome));
+  botao.setAttribute("aria-label", rotulo);
+  botao.title = dica;
 }
 
 // ---------- Conversa com a API ----------
@@ -122,10 +144,14 @@ async function carregarEstatisticas() {
 
 // ---------- Minha lista ----------
 
+// "1 ep." e "26 eps."
+function eps(numero) {
+  return numero === 1 ? "ep." : "eps.";
+}
+
 function textoTotal(anime) {
   // 1087 vira "1.087"
-  const total = anime.total_episodios === null ? "?" : anime.total_episodios.toLocaleString("pt-BR");
-  return `/ ${total} eps.`;
+  return anime.total_episodios === null ? "?" : anime.total_episodios.toLocaleString("pt-BR");
 }
 
 // O status acompanha os episódios: começou a ver vira "assistindo",
@@ -137,25 +163,6 @@ function mudancasPorEpisodios(anime, vistos) {
   if (total !== null && vistos === total) mudancas.status = "concluido";
   if (total !== null && vistos < total && anime.status === "concluido") mudancas.status = "assistindo";
   return mudancas;
-}
-
-function escolherEpisodio(anime, campo) {
-  // Espera a pessoa parar de digitar ou de clicar nas setinhas antes de salvar.
-  // Cada campo tem o próprio temporizador, para um cartão não cancelar o outro.
-  clearTimeout(campo.temporizador);
-  campo.temporizador = setTimeout(() => {
-    if (campo.value === "") return; // apagou para digitar outro número
-    const vistos = Number(campo.value);
-    const total = anime.total_episodios;
-    if (!Number.isInteger(vistos) || vistos < 0 || (total !== null && vistos > total)) {
-      mostrarMensagem(total === null
-        ? "Digite um número inteiro de episódios."
-        : `Digite um número de 0 a ${total}.`, true);
-      campo.value = anime.episodios_vistos;
-      return;
-    }
-    if (vistos !== anime.episodios_vistos) editar(anime.id, mudancasPorEpisodios(anime, vistos));
-  }, 700);
 }
 
 // A capa fica dentro de um botão que abre os detalhes; o nome vai no botão (aria-label),
@@ -182,7 +189,7 @@ function mostrarDetalhes(dados) {
   const info = [
     dados.tipo,
     dados.ano,
-    dados.total_episodios && `${dados.total_episodios} eps.`,
+    dados.total_episodios && `${dados.total_episodios} ${eps(dados.total_episodios)}`,
     dados.nota_mal && `nota ${dados.nota_mal.toLocaleString("pt-BR")} no MAL`,
   ].filter(Boolean);
   $("#detalhes-info").textContent = info.join(" · ");
@@ -257,20 +264,6 @@ function organizarFranquias(todos) {
   }
 }
 
-function criarFranquia(temporadas, visiveis) {
-  const quadro = $("#molde-franquia").content.firstElementChild.cloneNode(true);
-  const nome = temporadas[0].titulo; // a primeira a estrear dá nome à franquia
-  quadro.querySelector(".franquia__titulo").textContent = nome;
-  const soTemporadas = temporadas.every((a) => !(a.tipo in NOMES_DOS_TIPOS));
-  quadro.querySelector(".franquia__info").textContent =
-    `${temporadas.length} ${soTemporadas ? "temporadas" : "itens"} na lista`;
-  quadro.querySelector('[data-acao="temporadas"]').addEventListener("click", () =>
-    abrirTemporadas(temporadas.at(-1), nome),
-  );
-  quadro.querySelector(".franquia__grade").replaceChildren(...visiveis.map(criarCartaoAnime));
-  return quadro;
-}
-
 function criarItemTemporada(relacionado) {
   const item = $("#molde-temporada").content.firstElementChild.cloneNode(true);
   item.querySelector(".temporada__relacao").textContent =
@@ -318,58 +311,170 @@ function abrirTemporadas(anime, nome) {
 
 // ---------- Cartões da lista ----------
 
-function criarCartaoAnime(anime) {
+// franquia: { temporadas, visiveis } quando o anime faz parte de uma franquia com 2 ou mais na lista.
+function criarCartaoAnime(anime, franquia = null) {
   const cartao = $("#molde-anime").content.firstElementChild.cloneNode(true);
+  cartao.dataset.id = anime.id;
   preencherCapa(cartao, anime, () => abrirDetalhes(anime));
-  cartao.querySelector(".cartao__titulo").textContent = anime.titulo;
+  const titulo = cartao.querySelector(".cartao__titulo");
+  titulo.textContent = anime.titulo;
+  titulo.title = anime.titulo; // o título longo é cortado em 2 linhas; o mouse mostra inteiro
 
-  const rotulo = estado.rotulos.get(anime.id);
-  const temporada = cartao.querySelector(".cartao__temporada");
-  temporada.textContent = rotulo ?? "";
-  temporada.hidden = !rotulo;
-  // Anime sozinho: o link procura as outras temporadas. Em franquia, o botão fica no quadro.
-  const outras = cartao.querySelector('[data-acao="temporadas"]');
-  outras.hidden = Boolean(rotulo) || anime.mal_id === null;
-  outras.addEventListener("click", () => abrirTemporadas(anime, anime.titulo));
-  const vistos = cartao.querySelector('[data-campo="vistos"]');
-  vistos.value = anime.episodios_vistos;
-  if (anime.total_episodios !== null) vistos.max = anime.total_episodios;
-  vistos.addEventListener("input", () => escolherEpisodio(anime, vistos));
-  cartao.querySelector(".episodios__total").textContent = textoTotal(anime);
+  // Nota: um selo discreto na capa (só quando há nota)
+  if (anime.nota !== null) {
+    const selo = cartao.querySelector(".cartao__nota");
+    const texto = document.createElement("span");
+    texto.textContent = anime.nota;
+    selo.append(icone("estrela", 12), texto);
+    selo.setAttribute("aria-label", `Nota ${anime.nota}`);
+    selo.setAttribute("role", "img");
+    selo.hidden = false;
+  }
+
+  const status = cartao.querySelector('[data-campo="status"]');
+  status.value = anime.status;
+  status.dataset.status = anime.status;
+  status.setAttribute("aria-label", `Status de ${anime.titulo}`);
+  status.addEventListener("change", () => editar(anime.id, { status: status.value }));
+
+  const episodios = cartao.querySelector(".episodios__texto");
+  const vistos = document.createElement("strong");
+  vistos.textContent = anime.episodios_vistos.toLocaleString("pt-BR");
+  episodios.append(vistos, ` / ${textoTotal(anime)} ${eps(anime.total_episodios)}`);
 
   const porcentagem = anime.total_episodios
     ? (100 * anime.episodios_vistos) / anime.total_episodios
     : 0;
   cartao.querySelector(".progresso__barra").style.width = `${porcentagem}%`;
 
-  const status = cartao.querySelector('[data-campo="status"]');
-  status.value = anime.status;
-  status.addEventListener("change", () => editar(anime.id, { status: status.value }));
-
-  const nota = cartao.querySelector('[data-campo="nota"]');
-  for (let n = 10; n >= 1; n--) nota.add(new Option(String(n), String(n)));
-  nota.value = anime.nota ?? "";
-  nota.addEventListener("change", () =>
-    editar(anime.id, { nota: nota.value ? Number(nota.value) : null }),
-  );
-
   const mais1 = cartao.querySelector('[data-acao="mais1"]');
   const acabou = anime.total_episodios !== null && anime.episodios_vistos >= anime.total_episodios;
   mais1.disabled = acabou;
+  mais1.setAttribute("aria-label", `+1 ep. de ${anime.titulo}`);
   mais1.addEventListener("click", () =>
     editar(anime.id, mudancasPorEpisodios(anime, anime.episodios_vistos + 1)),
   );
 
   const comentarios = cartao.querySelector('[data-acao="comentarios"]');
-  comentarios.textContent = anime.comentarios ? `Comentários (${anime.comentarios})` : "Comentar";
+  if (anime.comentarios) {
+    const contagem = document.createElement("span");
+    contagem.className = "botao-icone__contagem";
+    contagem.textContent = anime.comentarios;
+    comentarios.append(contagem);
+    comentarios.classList.add("botao-icone--com-texto");
+  }
+  prepararBotaoIcone(comentarios, "comentario",
+    anime.comentarios ? `Comentários de ${anime.titulo} (${anime.comentarios})` : `Comentar ${anime.titulo}`,
+    anime.comentarios ? "Ver comentários" : "Comentar");
   comentarios.addEventListener("click", () => abrirComentarios(anime));
 
+  const editarBotao = cartao.querySelector('[data-acao="editar"]');
+  prepararBotaoIcone(editarBotao, "lapis", `Editar status, episódios e nota de ${anime.titulo}`,
+    "Editar status, episódios e nota");
+  editarBotao.addEventListener("click", () => abrirEdicao(anime));
+
+  // Outras temporadas: no anime sozinho procura a partir dele; na franquia, a partir da última.
+  const outras = cartao.querySelector('[data-acao="temporadas"]');
+  const nomeFranquia = franquia ? franquia.temporadas[0].titulo : anime.titulo;
+  outras.hidden = !franquia && anime.mal_id === null;
+  prepararBotaoIcone(outras, "camadas", `Ver outras temporadas de ${nomeFranquia}`, "Ver outras temporadas");
+  outras.addEventListener("click", () =>
+    abrirTemporadas(franquia ? franquia.temporadas.at(-1) : anime, nomeFranquia),
+  );
+
   const lixeira = cartao.querySelector('[data-acao="remover"]');
-  lixeira.append(iconeLixeira());
-  lixeira.setAttribute("aria-label", `Remover ${anime.titulo}`);
-  lixeira.title = "Remover da lista";
+  prepararBotaoIcone(lixeira, "lixeira", `Remover ${anime.titulo}`, "Remover da lista");
   lixeira.addEventListener("click", () => remover(anime));
   return cartao;
+}
+
+// ---------- Franquia: um cartão só, com as temporadas trocadas por botões sobre a capa ----------
+// Assim a franquia ocupa uma célula da grade como qualquer anime e o ritmo da grade não quebra.
+
+function temporadaInicial(visiveis) {
+  const escolhida = visiveis.find((a) => a.id === estado.temporadaEscolhida.get(visiveis[0].franquia));
+  return escolhida
+    ?? visiveis.find((a) => a.status === "assistindo")
+    ?? visiveis.find((a) => a.status !== "concluido")
+    ?? visiveis.at(-1);
+}
+
+function rotuloCurto(rotulo) {
+  return rotulo.replace(/^Temporada (\d+)$/, "T$1");
+}
+
+function criarCartaoFranquia(temporadas, visiveis, anime = temporadaInicial(visiveis)) {
+  const cartao = criarCartaoAnime(anime, { temporadas, visiveis });
+  cartao.classList.add("cartao--franquia");
+  const nome = temporadas[0].titulo; // a primeira a estrear dá nome à franquia
+  const soTemporadas = temporadas.every((a) => !(a.tipo in NOMES_DOS_TIPOS));
+
+  const grupo = document.createElement("div");
+  grupo.className = "cartao__temporadas";
+  grupo.setAttribute("role", "group");
+  grupo.setAttribute("aria-label",
+    `${nome}: ${temporadas.length} ${soTemporadas ? "temporadas" : "itens"} na lista`);
+  for (const temporada of visiveis) {
+    const rotulo = estado.rotulos.get(temporada.id);
+    const botao = document.createElement("button");
+    botao.type = "button";
+    botao.className = "temporada-botao";
+    botao.textContent = rotuloCurto(rotulo);
+    botao.dataset.temporada = temporada.id;
+    botao.setAttribute("aria-label", `${rotulo}: ${temporada.titulo}`);
+    botao.title = `${rotulo}: ${temporada.titulo}`;
+    botao.setAttribute("aria-pressed", String(temporada === anime));
+    botao.addEventListener("click", () => {
+      if (temporada === anime) return;
+      estado.temporadaEscolhida.set(anime.franquia, temporada.id);
+      const novo = criarCartaoFranquia(temporadas, visiveis, temporada);
+      cartao.replaceWith(novo);
+      novo.querySelector(`[data-temporada="${temporada.id}"]`).focus();
+    });
+    grupo.append(botao);
+  }
+  cartao.querySelector(".cartao__midia").append(grupo);
+  return cartao;
+}
+
+// ---------- Editar (status, episódios vistos e nota) ----------
+
+function abrirEdicao(anime) {
+  estado.animeEditado = anime;
+  $("#editar-titulo").textContent = anime.titulo;
+  const rotulo = estado.rotulos.get(anime.id);
+  $("#editar-temporada").textContent = rotulo ?? "";
+  $("#editar-temporada").hidden = !rotulo;
+  $("#editar-status").value = anime.status;
+  const vistos = $("#editar-vistos");
+  vistos.value = anime.episodios_vistos;
+  if (anime.total_episodios !== null) vistos.max = anime.total_episodios;
+  else vistos.removeAttribute("max");
+  $("#editar-total").textContent = anime.total_episodios === null
+    ? "(total ainda não conhecido)"
+    : `de ${textoTotal(anime)}`;
+  $("#editar-nota").value = anime.nota ?? "";
+  $("#dialogo-editar").showModal();
+}
+
+async function salvarEdicao(evento) {
+  evento.preventDefault();
+  const anime = estado.animeEditado;
+  const vistos = Number($("#editar-vistos").value);
+  const total = anime.total_episodios;
+  if (!Number.isInteger(vistos) || vistos < 0 || (total !== null && vistos > total)) {
+    return mostrarMensagem(total === null
+      ? "Digite um número inteiro de episódios."
+      : `Digite um número de 0 a ${total}.`, true);
+  }
+  // Os episódios ajustam o status sozinhos; se a pessoa escolheu outro status, vale a escolha dela.
+  const mudancas = vistos !== anime.episodios_vistos ? mudancasPorEpisodios(anime, vistos) : {};
+  const status = $("#editar-status").value;
+  if (status !== anime.status) mudancas.status = status;
+  const nota = $("#editar-nota").value ? Number($("#editar-nota").value) : null;
+  if (nota !== anime.nota) mudancas.nota = nota;
+  $("#dialogo-editar").close();
+  if (Object.keys(mudancas).length) await editar(anime.id, mudancas);
 }
 
 async function carregarLista() {
@@ -388,10 +493,21 @@ async function carregarLista() {
     i += visiveis.length;
     grupos.push({ visiveis, temporadas: estado.franquias.get(visiveis[0].franquia) ?? visiveis });
   }
-  const elementos = ordenarGrupos(grupos).flatMap(({ visiveis, temporadas }) =>
-    temporadas.length > 1 ? [criarFranquia(temporadas, visiveis)] : visiveis.map(criarCartaoAnime),
+  const elementos = ordenarGrupos(grupos).map(({ visiveis, temporadas }) =>
+    temporadas.length > 1 ? criarCartaoFranquia(temporadas, visiveis) : criarCartaoAnime(visiveis[0]),
   );
+  // Os cartões são recriados: quem estava com o foco num botão (ex.: +1 ep.) volta para ele.
+  const focado = document.activeElement?.closest?.("#lista [data-id]") && document.activeElement;
+  const voltar = focado && {
+    id: focado.closest("[data-id]").dataset.id,
+    seletor: focado.dataset.acao ? `[data-acao="${focado.dataset.acao}"]`
+      : focado.dataset.campo ? `[data-campo="${focado.dataset.campo}"]` : null,
+  };
   $("#lista").replaceChildren(...elementos);
+  if (voltar?.seletor) {
+    const alvo = $(`#lista [data-id="${voltar.id}"] ${voltar.seletor}`);
+    if (alvo && !alvo.disabled) alvo.focus();
+  }
 
   let aviso = "";
   if (animes.length === 0) {
@@ -535,12 +651,14 @@ function criarCartaoCatalogo(anime) {
   const cartao = $("#molde-catalogo").content.firstElementChild.cloneNode(true);
   cartao.dataset.malId = anime.mal_id;
   preencherCapa(cartao, anime, () => abrirDetalhes(anime, anime));
-  cartao.querySelector(".cartao__titulo").textContent = anime.titulo;
+  const titulo = cartao.querySelector(".cartao__titulo");
+  titulo.textContent = anime.titulo;
+  titulo.title = anime.titulo;
 
   const info = [
     anime.tipo,
     anime.ano,
-    anime.total_episodios && `${anime.total_episodios} eps.`,
+    anime.total_episodios && `${anime.total_episodios} ${eps(anime.total_episodios)}`,
     anime.nota_mal && `nota ${anime.nota_mal} no MAL`,
   ].filter(Boolean);
   cartao.querySelector(".cartao__info").textContent = info.join(" · ");
@@ -567,7 +685,8 @@ function marcarAdicionadosNoCatalogo() {
     const jaNaLista = estado.malIdsNaLista.has(Number(cartao.dataset.malId));
     const botao = cartao.querySelector('[data-acao="adicionar"]');
     botao.disabled = jaNaLista;
-    botao.textContent = jaNaLista ? "✓ Na sua lista" : "+ Adicionar";
+    botao.classList.toggle("cartao__adicionar--na-lista", jaNaLista);
+    botao.replaceChildren(icone(jaNaLista ? "certo" : "mais", 16), jaNaLista ? "Na sua lista" : "Adicionar");
   }
 }
 
@@ -780,10 +899,14 @@ $("#ordem").addEventListener("change", (evento) => {
   carregarLista().catch((erro) => mostrarMensagem(erro.message, true));
 });
 $("#form-comentario").addEventListener("submit", enviarComentario);
+$("#form-editar").addEventListener("submit", salvarEdicao);
+for (let n = 10; n >= 1; n--) $("#editar-nota").add(new Option(String(n), String(n)));
 $("#arquivo-backup").addEventListener("change", importarBackup);
 for (const dialogo of document.querySelectorAll("dialog")) {
   dialogo.addEventListener("click", fecharAoClicarFora);
-  dialogo.querySelector("[data-fechar]").addEventListener("click", () => dialogo.close());
+  for (const botao of dialogo.querySelectorAll("[data-fechar]")) {
+    botao.addEventListener("click", () => dialogo.close());
+  }
 }
 
 iniciarAbas();

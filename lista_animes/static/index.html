@@ -107,66 +107,48 @@
   <!-- Moldes dos cartões: o app.js copia e preenche com textContent (nunca innerHTML) -->
   <template id="molde-catalogo">
     <article class="cartao spot">
-      <button class="cartao__moldura" type="button" data-acao="detalhes"><img class="cartao__capa" alt="" loading="lazy"></button>
+      <div class="cartao__midia">
+        <button class="cartao__moldura" type="button" data-acao="detalhes"><img class="cartao__capa" alt="" loading="lazy"></button>
+      </div>
       <div class="cartao__corpo">
         <h3 class="cartao__titulo"></h3>
         <p class="cartao__info"></p>
         <p class="cartao__generos"></p>
-        <button class="botao botao--pequeno" type="button" data-acao="adicionar">+ Adicionar</button>
+        <button class="botao botao--pequeno botao--icone-texto cartao__adicionar" type="button" data-acao="adicionar"></button>
       </div>
     </article>
   </template>
 
+  <!-- Cartão leve: capa, título, status, episódios e +1 ep. à vista; o resto em botões de ícone.
+       Nota, status e episódios exatos se editam na janela "Editar" (dialogo-editar). -->
   <template id="molde-anime">
     <article class="cartao spot">
-      <button class="cartao__moldura" type="button" data-acao="detalhes"><img class="cartao__capa" alt="" loading="lazy"></button>
+      <div class="cartao__midia">
+        <button class="cartao__moldura" type="button" data-acao="detalhes"><img class="cartao__capa" alt="" loading="lazy"></button>
+        <span class="cartao__nota" hidden></span>
+      </div>
       <div class="cartao__corpo">
-        <p class="cartao__temporada" hidden></p>
         <h3 class="cartao__titulo"></h3>
-        <button class="cartao__link" type="button" data-acao="temporadas" hidden>Ver outras temporadas</button>
-        <label class="rotulo">Status
-          <select class="campo campo--pequeno" data-campo="status">
-            <option value="quero_ver">Quero ver</option>
-            <option value="assistindo">Assistindo</option>
-            <option value="concluido">Concluído</option>
-            <option value="abandonado">Abandonado</option>
-          </select>
-        </label>
+        <select class="campo campo--pequeno cartao__status" data-campo="status">
+          <option value="quero_ver">Quero ver</option>
+          <option value="assistindo">Assistindo</option>
+          <option value="concluido">Concluído</option>
+          <option value="abandonado">Abandonado</option>
+        </select>
         <div class="episodios">
-          <label class="episodios__texto">
-            <input class="campo campo--pequeno campo--numero" type="number" min="0" step="1"
-                   inputmode="numeric" data-campo="vistos" aria-label="Episódios vistos">
-            <span class="episodios__total"></span>
-          </label>
-          <button class="botao botao--pequeno botao--fantasma" type="button" data-acao="mais1">+1 ep.</button>
+          <span class="episodios__texto"></span>
+          <button class="botao botao--pequeno botao--suave" type="button" data-acao="mais1">+1 ep.</button>
         </div>
-        <div class="progresso"><div class="progresso__barra"></div></div>
-        <label class="rotulo">Nota
-          <select class="campo campo--pequeno" data-campo="nota">
-            <option value="">—</option>
-          </select>
-        </label>
+        <div class="progresso" aria-hidden="true"><div class="progresso__barra"></div></div>
+        <!-- Ações secundárias: só ícones; o nome do anime vai no aria-label de cada uma -->
         <div class="cartao__acoes">
-          <button class="botao botao--pequeno botao--fantasma" type="button" data-acao="comentarios"></button>
-          <!-- Lixeira: o ícone é desenhado pelo app.js; o nome do anime vai no aria-label -->
-          <button class="botao-icone" type="button" data-acao="remover"></button>
+          <button class="botao-icone" type="button" data-acao="comentarios"></button>
+          <button class="botao-icone" type="button" data-acao="editar"></button>
+          <button class="botao-icone" type="button" data-acao="temporadas"></button>
+          <button class="botao-icone botao-icone--perigo" type="button" data-acao="remover"></button>
         </div>
       </div>
     </article>
-  </template>
-
-  <!-- Temporadas da mesma franquia ficam juntas neste quadro -->
-  <template id="molde-franquia">
-    <section class="franquia">
-      <div class="franquia__topo">
-        <div>
-          <h3 class="franquia__titulo"></h3>
-          <p class="franquia__info"></p>
-        </div>
-        <button class="botao botao--pequeno botao--fantasma" type="button" data-acao="temporadas">Outras temporadas</button>
-      </div>
-      <div class="grade franquia__grade"></div>
-    </section>
   </template>
 
   <template id="molde-temporada">
@@ -188,6 +170,42 @@
       <p class="comentario__texto"></p>
     </li>
   </template>
+
+  <!-- Janela para editar status, episódios vistos e nota (abre pelo lápis do cartão) -->
+  <dialog class="dialogo dialogo--estreito" id="dialogo-editar" aria-labelledby="editar-titulo">
+    <div class="dialogo__topo">
+      <div>
+        <h2 class="dialogo__titulo" id="editar-titulo"></h2>
+        <p class="dialogo__subtitulo" id="editar-temporada" hidden></p>
+      </div>
+    </div>
+    <form class="editar" id="form-editar">
+      <label class="rotulo">Status
+        <select class="campo" id="editar-status">
+          <option value="quero_ver">Quero ver</option>
+          <option value="assistindo">Assistindo</option>
+          <option value="concluido">Concluído</option>
+          <option value="abandonado">Abandonado</option>
+        </select>
+      </label>
+      <label class="rotulo">Episódios vistos
+        <span class="editar__episodios">
+          <input class="campo campo--numero" id="editar-vistos" type="number" min="0" step="1"
+                 inputmode="numeric" required>
+          <span id="editar-total"></span>
+        </span>
+      </label>
+      <label class="rotulo">Nota
+        <select class="campo" id="editar-nota">
+          <option value="">Sem nota</option>
+        </select>
+      </label>
+      <div class="editar__botoes">
+        <button class="botao botao--fantasma" type="button" data-fechar>Cancelar</button>
+        <button class="botao" type="submit">Salvar</button>
+      </div>
+    </form>
+  </dialog>
 
   <!-- Janela de comentários de um anime (abre pelo botão do cartão) -->
   <dialog class="dialogo" id="dialogo-comentarios" aria-labelledby="comentarios-titulo">
