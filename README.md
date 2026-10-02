@@ -16,8 +16,9 @@ API REST em Python com **FastAPI** para organizar sua lista de animes: o que voc
 
 - **Adicionar do MyAnimeList:** busque pelo nome, pelo ID ou colando o link do anime. Título, número de episódios e capa são preenchidos sozinhos. Se a busca por nome do MyAnimeList estiver fora do ar, ela é refeita no [AniList](https://anilist.co), que diz o ID de cada anime no MyAnimeList; adicionar continua funcionando igual.
 - **Acompanhar o progresso:** status (quero ver, assistindo, concluído, abandonado), episódios vistos com barra de progresso e nota de 1 a 10.
-- **Escolher o episódio:** digite o número (ou use as setinhas), ou clique em **+1 ep.**. Ao começar, o anime passa para "assistindo". No último episódio, vira "concluído".
-- **Temporadas juntas:** no MyAnimeList, cada temporada é um anime separado. Ao adicionar, a API vê na Jikan qual é a temporada anterior e a seguinte, e as temporadas da mesma franquia ficam num quadro só ("Temporada 1", "Temporada 2", "Filme"...). O botão **Outras temporadas** mostra as que faltam e adiciona com um clique.
+- **Cartões leves:** cada cartão mostra a capa, o título, o status e o progresso, com o **+1 ep.** à mão. As outras ações são ícones discretos no pé do cartão: comentários, editar, outras temporadas e remover.
+- **Escolher o episódio:** clique em **+1 ep.** ou, no ícone de editar, digite o número exato (e mude a nota e o status). Ao começar, o anime passa para "assistindo". No último episódio, vira "concluído".
+- **Temporadas juntas:** no MyAnimeList, cada temporada é um anime separado. Ao adicionar, a API vê na Jikan qual é a temporada anterior e a seguinte, e as temporadas da mesma franquia ficam num cartão só, com botões sobre a capa para trocar entre elas ("T1", "T2", "Filme"...). Assim a grade não quebra. O ícone de **outras temporadas** mostra as que faltam e adiciona com um clique.
 - **Comentários:** cada anime tem um histórico de anotações com data, e cada uma pode dizer o episódio ("ep. 7: que luta!").
 - **Duas abas:** **Minha lista** e **Adicionar**, cada uma com endereço próprio (`/#adicionar`), com as mesmas animações do [portfólio](https://lakes777.github.io).
 - **Filtros e ordem:** abas por status, busca por parte do título e ordem (adicionados por último ou primeiro, título ou maior nota), sem separar as temporadas da mesma franquia. A ordem escolhida fica guardada no navegador.
@@ -99,7 +100,7 @@ pip install -r requirements-dev.txt
 pytest
 ```
 
-São 183 testes cobrindo as validações, o banco de dados, as rotas, o catálogo, as temporadas, os comentários, o backup e os arquivos do front. **Nenhum teste acessa a internet nem a sua lista real:**
+São 193 testes cobrindo as validações, o banco de dados, as rotas, o catálogo, as temporadas, os comentários, o backup e os arquivos do front. **Nenhum teste acessa a internet nem a sua lista real:**
 
 - Cada teste usa um banco novo numa pasta temporária (`tmp_path`).
 - A Jikan é substituída por uma imitação (`httpx.MockTransport`) que responde com respostas reais gravadas em `tests/dados/` (Frieren e as duas primeiras temporadas de Attack on Titan). Se o código tentar uma consulta que o teste não previu, o teste falha.
