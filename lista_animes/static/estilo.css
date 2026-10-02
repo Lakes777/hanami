@@ -1202,6 +1202,19 @@ body {
   color: var(--text-muted);
   font-size: 0.9rem;
   line-height: 1.45;
+  transition:
+    transform 0.35s var(--ease-out),
+    border-color 0.35s,
+    box-shadow 0.35s;
+}
+
+/* Cartões que saltam um pouco com o mouse, como no portfólio e no Controle de Gastos */
+@media (hover: hover) {
+  .destaque:hover {
+    transform: translateY(-4px);
+    border-color: #3a3d44;
+    box-shadow: 0 16px 36px rgb(0 0 0 / 0.35);
+  }
 }
 
 .destaque strong {
@@ -1483,6 +1496,7 @@ body {
   .cartao:hover,
   .cartao:has(:focus-visible),
   .cartao:hover .cartao__capa,
+  .destaque:hover,
   .botao--vivo:hover:not(:disabled) {
     transform: none;
   }
