@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 300" fill="none" stroke="#c7cad0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Ficha de anime: capa, título, estrelas de nota e episódios -->
+  <defs>
+    <path id="estrela" d="M0-12l3.5 7.5 8 1-6 5.5 1.5 8-7-4-7 4 1.5-8-6-5.5 8-1z"/>
+  </defs>
+  <rect x="40" y="30" width="440" height="240" rx="12"/>
+  <rect x="62" y="52" width="130" height="190" rx="6"/>
+  <path d="M62 200l40-44 30 30 24-20 36 36"/>
+  <circle cx="150" cy="96" r="12"/>
+  <path d="M216 62h180M216 82h120"/>
+  <use href="#estrela" x="226" y="122" stroke="#4fc3f7"/>
+  <use href="#estrela" x="256" y="122" stroke="#4fc3f7"/>
+  <use href="#estrela" x="286" y="122" stroke="#4fc3f7"/>
+  <use href="#estrela" x="316" y="122" stroke="#4fc3f7"/>
+  <use href="#estrela" x="346" y="122"/>
+  <path d="M376 122h40"/>
+  <path d="M216 160h240M216 176h220M216 192h180"/>
+  <rect x="216" y="214" width="70" height="24" rx="12"/>
+  <rect x="296" y="214" width="84" height="24" rx="12"/>
+  <path d="M400 226h56" stroke="#4fc3f7" stroke-width="3"/>
+</svg>

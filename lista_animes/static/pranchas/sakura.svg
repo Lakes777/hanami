@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 300" fill="none" stroke="#c7cad0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Galho de cerejeira com pétalas caindo -->
+  <defs>
+    <path id="petala" d="M0 0c-6-8-6-18 0-22 6 4 6 14 0 22z"/>
+    <g id="flor">
+      <use href="#petala"/>
+      <use href="#petala" transform="rotate(72)"/>
+      <use href="#petala" transform="rotate(144)"/>
+      <use href="#petala" transform="rotate(216)"/>
+      <use href="#petala" transform="rotate(288)"/>
+      <circle r="3"/>
+    </g>
+  </defs>
+  <path d="M10 40c60 10 120 30 170 64s110 52 170 46 110-30 160-30"/>
+  <path d="M120 70c10-20 30-32 52-36M230 130c4 30 22 54 48 66M350 150c20-26 48-40 80-42"/>
+  <use href="#flor" x="176" y="34"/>
+  <use href="#flor" x="282" y="198" stroke="#4fc3f7"/>
+  <use href="#flor" x="432" y="106"/>
+  <use href="#flor" x="96" y="66"/>
+  <use href="#flor" x="350" y="146"/>
+  <use href="#petala" x="60" y="190" transform="rotate(20 60 190)"/>
+  <use href="#petala" x="150" y="250" transform="rotate(-40 150 250)"/>
+  <use href="#petala" x="420" y="240" transform="rotate(60 420 240)" stroke="#4fc3f7"/>
+  <use href="#petala" x="480" y="190" transform="rotate(-10 480 190)"/>
+  <use href="#petala" x="220" y="280" transform="rotate(100 220 280)"/>
+  <path d="M40 220c8-4 16-4 24 0M180 200c8-4 16-4 24 0M370 270c8-4 16-4 24 0"/>
+</svg>

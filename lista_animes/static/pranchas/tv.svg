@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 300" fill="none" stroke="#c7cad0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Tela de TV com a barra de progresso dos episódios -->
+  <path d="M210 22l50 34 50-34"/>
+  <rect x="70" y="56" width="380" height="210" rx="14"/>
+  <rect x="88" y="72" width="344" height="160" rx="6"/>
+  <path d="M240 128v48l42-24z" stroke="#4fc3f7"/>
+  <path d="M104 214h312"/>
+  <path d="M104 214h196" stroke="#4fc3f7" stroke-width="3"/>
+  <circle cx="300" cy="214" r="5" stroke="#4fc3f7"/>
+  <path d="M104 88h70M104 100h44"/>
+  <path d="M380 88h36M380 100h36"/>
+  <path d="M120 266l-14 18M400 266l14 18"/>
+  <path d="M104 248h24M136 248h24M168 248h24M200 248h24M232 248h24M264 248h24"/>
+  <path d="M104 244v8M136 244v8M168 244v8M200 244v8" stroke="#4fc3f7"/>
+  <circle cx="420" cy="248" r="5"/>
+  <circle cx="400" cy="248" r="3"/>
+</svg>

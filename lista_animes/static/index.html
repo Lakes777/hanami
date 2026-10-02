@@ -14,13 +14,15 @@
 <body>
   <header class="topo">
     <div class="container topo__conteudo">
-      <h1 class="topo__titulo">Lista de Animes</h1>
+      <!-- O nome leva de volta ao início; o h1 de cada tela fica dentro dela -->
+      <a class="topo__titulo" href="#inicio">Lista de Animes</a>
       <a class="topo__link" href="/docs">Documentação da API</a>
     </div>
     <div class="container">
-      <!-- Cada link abre uma aba (o endereço muda para #minha-lista ou #adicionar) -->
+      <!-- Cada link abre uma aba (o endereço muda para #inicio, #minha-lista ou #adicionar) -->
       <nav class="menu" aria-label="Seções">
         <span class="menu__pilula" id="menu-pilula" aria-hidden="true"></span>
+        <a class="menu__link" href="#inicio">Início</a>
         <a class="menu__link" href="#minha-lista">Minha lista</a>
         <a class="menu__link" href="#adicionar">Adicionar</a>
       </nav>
@@ -35,9 +37,76 @@
       <a href="https://github.com/Lakes777/lista-animes" target="_blank" rel="noopener">Ver o código no GitHub</a>
     </p>
 
+    <!-- Início (lobby): o que é o projeto e por onde começar. O fundo com as pranchas
+         só existe aqui; o app.js repete cada faixa uma vez para o loop não ter emenda. -->
+    <section class="aba-tela lobby" id="inicio" aria-labelledby="titulo-inicio">
+      <div class="lobby__fundo" aria-hidden="true">
+        <div class="faixa faixa--1">
+          <div class="faixa__trilho">
+          <img src="/static/pranchas/manga.svg" alt="" width="520" height="300" decoding="async">
+          <img src="/static/pranchas/tv.svg" alt="" width="520" height="300" decoding="async">
+          <img src="/static/pranchas/sakura.svg" alt="" width="520" height="300" decoding="async">
+          <img src="/static/pranchas/torii.svg" alt="" width="520" height="300" decoding="async">
+          <img src="/static/pranchas/ficha.svg" alt="" width="520" height="300" decoding="async">
+          <img src="/static/pranchas/pelicula.svg" alt="" width="520" height="300" decoding="async">
+          </div>
+        </div>
+        <div class="faixa faixa--2">
+          <div class="faixa__trilho">
+          <img src="/static/pranchas/sakura.svg" alt="" width="520" height="300" decoding="async">
+          <img src="/static/pranchas/pelicula.svg" alt="" width="520" height="300" decoding="async">
+          <img src="/static/pranchas/manga.svg" alt="" width="520" height="300" decoding="async">
+          <img src="/static/pranchas/ficha.svg" alt="" width="520" height="300" decoding="async">
+          <img src="/static/pranchas/torii.svg" alt="" width="520" height="300" decoding="async">
+          <img src="/static/pranchas/tv.svg" alt="" width="520" height="300" decoding="async">
+          </div>
+        </div>
+        <div class="faixa faixa--3">
+          <div class="faixa__trilho">
+          <img src="/static/pranchas/torii.svg" alt="" width="520" height="300" decoding="async">
+          <img src="/static/pranchas/ficha.svg" alt="" width="520" height="300" decoding="async">
+          <img src="/static/pranchas/tv.svg" alt="" width="520" height="300" decoding="async">
+          <img src="/static/pranchas/pelicula.svg" alt="" width="520" height="300" decoding="async">
+          <img src="/static/pranchas/sakura.svg" alt="" width="520" height="300" decoding="async">
+          <img src="/static/pranchas/manga.svg" alt="" width="520" height="300" decoding="async">
+          </div>
+        </div>
+      </div>
+
+      <div class="lobby__conteudo">
+        <p class="lobby__chamada reveal" data-grupo="0">Projeto de portfólio · FastAPI + JavaScript</p>
+        <h1 class="lobby__nome aba-tela__titulo reveal" id="titulo-inicio" tabindex="-1" data-grupo="0">Lista de Animes</h1>
+        <p class="lobby__frase reveal" data-grupo="1">
+          Organize o que você assiste: busque no MyAnimeList, marque os episódios vistos,
+          dê notas e deixe comentários, tudo num só lugar.
+        </p>
+        <p class="lobby__numeros reveal" id="lobby-numeros" data-grupo="1" hidden></p>
+
+        <ul class="destaques reveal" data-grupo="2">
+          <li class="destaque">
+            <span class="destaque__icone" data-icone="busca"></span>
+            <span><strong>Busca no MyAnimeList</strong> pelo nome, pelo ID ou pelo link, com capa e sinopse.</span>
+          </li>
+          <li class="destaque">
+            <span class="destaque__icone" data-icone="camadas"></span>
+            <span><strong>Temporadas juntas</strong>: a mesma franquia fica num cartão só.</span>
+          </li>
+          <li class="destaque">
+            <span class="destaque__icone" data-icone="comentario"></span>
+            <span><strong>Comentários por episódio</strong>, para lembrar do que achou.</span>
+          </li>
+        </ul>
+
+        <div class="lobby__botoes reveal" data-grupo="2">
+          <a class="botao botao--vivo lobby__comecar" href="#minha-lista">Começar</a>
+          <a class="lobby__codigo" href="https://github.com/Lakes777/lista-animes" target="_blank" rel="noopener">Ver o código no GitHub</a>
+        </div>
+      </div>
+    </section>
+
     <!-- Cada aba entra em até 3 blocos (data-grupo 0, 1 e 2): título, conteúdo principal, resto -->
     <section class="aba-tela" id="minha-lista" aria-labelledby="titulo-lista">
-      <h2 class="aba-tela__titulo reveal" id="titulo-lista" tabindex="-1" data-grupo="0">Minha lista</h2>
+      <h1 class="aba-tela__titulo reveal" id="titulo-lista" tabindex="-1" data-grupo="0">Minha lista</h1>
 
       <!-- Estatísticas: preenchidas pelo app.js com GET /animes/estatisticas -->
       <div class="estatisticas reveal" id="estatisticas" aria-label="Estatísticas" data-grupo="1"></div>
@@ -72,7 +141,7 @@
 
     <section class="aba-tela" id="adicionar" aria-labelledby="titulo-adicionar">
       <div class="reveal" data-grupo="0">
-        <h2 class="aba-tela__titulo" id="titulo-adicionar" tabindex="-1">Adicionar do MyAnimeList</h2>
+        <h1 class="aba-tela__titulo" id="titulo-adicionar" tabindex="-1">Adicionar do MyAnimeList</h1>
         <p class="aba-tela__nota">Busque pelo nome, pelo ID ou colando o link da página do anime no MyAnimeList.</p>
       </div>
       <form class="busca reveal" id="form-catalogo" data-grupo="1">
@@ -88,7 +157,7 @@
 
       <!-- Backup: baixa a lista num arquivo JSON e junta um arquivo desses de volta -->
       <section class="backup reveal" aria-labelledby="titulo-backup" data-grupo="2">
-        <h3 class="backup__titulo" id="titulo-backup">Backup da lista</h3>
+        <h2 class="backup__titulo" id="titulo-backup">Backup da lista</h2>
         <p class="backup__texto">
           Baixe a lista inteira (com comentários e temporadas) num arquivo, para guardar ou levar
           para outro computador. Ao importar, os animes que já estão na lista ficam como estão.
@@ -111,7 +180,7 @@
         <button class="cartao__moldura" type="button" data-acao="detalhes"><img class="cartao__capa" alt="" loading="lazy"></button>
       </div>
       <div class="cartao__corpo">
-        <h3 class="cartao__titulo"></h3>
+        <h2 class="cartao__titulo"></h2>
         <p class="cartao__info"></p>
         <p class="cartao__generos"></p>
         <button class="botao botao--pequeno botao--icone-texto cartao__adicionar" type="button" data-acao="adicionar"></button>
@@ -128,7 +197,7 @@
         <span class="cartao__nota" hidden></span>
       </div>
       <div class="cartao__corpo">
-        <h3 class="cartao__titulo"></h3>
+        <h2 class="cartao__titulo"></h2>
         <select class="campo campo--pequeno cartao__status" data-campo="status">
           <option value="quero_ver">Quero ver</option>
           <option value="assistindo">Assistindo</option>

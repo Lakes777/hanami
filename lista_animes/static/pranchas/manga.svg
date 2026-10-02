@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 300" fill="none" stroke="#c7cad0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Página de mangá: quadros, balões de fala e linhas de velocidade -->
+  <rect x="20" y="16" width="480" height="268" rx="4"/>
+  <path d="M34 30h220v118H34zM268 30h218v74H268zM268 118h218v152H268zM34 162h220v108H34z"/>
+  <path d="M44 138l70-46M44 120l90-62M60 140l110-74M90 140l120-80M130 140l100-66M170 140l70-44"/>
+  <path d="M150 56c0-12 18-20 40-20s40 8 40 20-18 20-40 20c-6 0-12-1-17-2l-14 10 4-13c-8-4-13-9-13-15z" stroke="#4fc3f7"/>
+  <path d="M174 54h32M178 62h24" stroke="#4fc3f7"/>
+  <path d="M290 46h60M290 58h90M290 70h44"/>
+  <path d="M410 56l14-14 6 12 14-8-4 14 16 2-14 8 10 12-16-2-2 14-10-12-10 10 2-14-16 0 12-10z"/>
+  <path d="M300 150c0-14 22-24 50-24s50 10 50 24-22 24-50 24c-8 0-15-1-21-3l-17 11 6-15c-11-5-18-11-18-17z"/>
+  <path d="M330 148h40M326 158h48"/>
+  <path d="M290 260l60-60M320 260l80-80M360 260l100-100M410 260l70-70M300 210l40-40"/>
+  <path d="M60 250c10-30 40-50 70-50s56 18 66 46"/>
+  <circle cx="130" cy="196" r="18"/>
+  <path d="M190 184l40-12M196 200l44 0M190 216l40 12" stroke="#4fc3f7"/>
+</svg>
