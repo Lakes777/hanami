@@ -936,10 +936,19 @@ function iniciarAbas() {
 
 // ---------- Início (lobby) ----------
 
-// Cada faixa de pranchas anda de 0 a -50%: com o conjunto repetido uma vez, o fim da
-// volta é igual ao começo e o loop não tem emenda. As cópias são só enfeite (alt="").
+// Cada faixa de pranchas anda de 0 a -50%: o trilho é uma metade repetida duas vezes,
+// então o fim da volta é igual ao começo e o loop não tem emenda. Cada metade precisa
+// passar da largura da tela (o conjunto de 6 pranchas tem uns 2.350 px), senão abre um
+// vão em telas largas: o conjunto se repete quantas vezes for preciso.
+// As cópias são só enfeite (alt="").
 function prepararInicio() {
+  const largura = Math.max(screen.width, window.innerWidth);
+  const repeticoes = Math.max(1, Math.ceil(largura / 2200));
   for (const trilho of document.querySelectorAll(".faixa__trilho")) {
+    const conjunto = [...trilho.children];
+    for (let i = 1; i < repeticoes; i++) {
+      for (const prancha of conjunto) trilho.append(prancha.cloneNode());
+    }
     for (const prancha of [...trilho.children]) trilho.append(prancha.cloneNode());
   }
   for (const lugar of document.querySelectorAll(".destaque__icone")) {

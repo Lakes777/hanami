@@ -86,7 +86,8 @@ def test_pranchas_do_fundo_sao_decorativas(pagina):
     fundo = next(a for t, a, _ in pagina if a.get("class") == "lobby__fundo")
     assert fundo["aria-hidden"] == "true"
     imagens = [a for t, a, onde in pagina if t == "img" and "/pranchas/" in a.get("src", "")]
-    assert len(imagens) == 18  # 3 faixas com as 6 pranchas (o app.js repete cada faixa)
+    # 3 faixas com as 6 pranchas cada; o app.js repete o conjunto conforme a largura da tela
+    assert len(imagens) == 18
     assert all(a["alt"] == "" for a in imagens)
     assert {a["src"].rsplit("/", 1)[1] for a in imagens} == {f"{n}.svg" for n in PRANCHAS}
 
@@ -115,10 +116,28 @@ def test_faixas_andam_so_com_transform(estilo):
     assert "animation-direction: reverse" in estilo
 
 
+def bloco_de_menos_movimento(estilo):
+    inicio = estilo.index("@media (prefers-reduced-motion: reduce)")
+    # O bloco termina na primeira chave que fecha sozinha numa linha
+    return estilo[inicio : estilo.index("\n}", inicio)]
+
+
 def test_faixas_param_com_menos_animacao(estilo):
     """A regra geral de menos movimento desliga toda animação (inclusive as faixas)."""
-    bloco = estilo[estilo.index("@media (prefers-reduced-motion: reduce)"):]
+    bloco = bloco_de_menos_movimento(estilo)
     assert "animation: none !important" in bloco
+    # E nenhuma regra das faixas, dentro do bloco, religa a animação
+    for seletor, regra in re.findall(r"([^{}]+)\{([^{}]*)\}", bloco):
+        if "faixa" in seletor:
+            assert "animation" not in regra, seletor
+
+
+def test_lobby_desconta_a_altura_do_topo(estilo):
+    """Uma variável só para a altura do topo: o lobby e a rolagem usam o mesmo valor."""
+    assert re.search(r"--altura-topo: \d+px", estilo)
+    lobby = re.search(r"\.lobby \{(.*?)\}", estilo, re.S).group(1)
+    assert "min-height: calc(100svh - var(--altura-topo))" in lobby
+    assert "scroll-padding-top: calc(var(--altura-topo)" in estilo
 
 
 def test_fundo_nao_cria_rolagem_de_lado(estilo):
@@ -131,3 +150,32 @@ def test_app_js_repete_as_faixas_e_trata_o_inicio(app_js):
     preparar = re.search(r"function prepararInicio\(.*?\n}", app_js, re.S).group()
     assert "cloneNode()" in preparar
     assert 'atual.id === "inicio"' in app_js
+
+
+def test_faixas_cobrem_telas_largas(app_js):
+    """Cada metade do trilho tem que passar da largura da tela, senão abre um vão no loop:
+    o conjunto se repete conforme a tela e só depois a metade é duplicada (-50% exato)."""
+    preparar = re.search(r"function prepararInicio\(.*?\n}", app_js, re.S).group()
+    assert "Math.max(screen.width, window.innerWidth)" in preparar
+    assert "Math.ceil(largura / 2200)" in preparar
+    repetir = preparar.index("i < repeticoes")
+    duplicar = preparar.index("for (const prancha of [...trilho.children]) trilho.append")
+    assert repetir < duplicar
+
+
+def test_numeros_do_inicio(app_js, pagina):
+    """A linha de números some com a lista vazia e acerta singular e plural."""
+    funcao = re.search(r"function mostrarNumerosNoInicio\(.*?\n}", app_js, re.S).group()
+    assert "linha.hidden = e.total === 0" in funcao
+    assert 'e.total === 1 ? "anime" : "animes"' in funcao
+    assert 'vistos === 1 ? "episódio visto" : "episódios vistos"' in funcao
+    assert "textContent" in funcao and "innerHTML" not in funcao
+    assert "mostrarNumerosNoInicio(e)" in app_js  # chamada ao carregar as estatísticas
+    linha = next(a for t, a, _ in pagina if a.get("id") == "lobby-numeros")
+    assert "hidden" in linha  # começa escondida até a API responder
+
+
+def test_aviso_de_demo_fica_fora_do_inicio(app_js, estilo):
+    assert re.search(r"\.no-inicio \.demo \{\s*display: none;", estilo)
+    assert 'classList.toggle("no-inicio", noInicio)' in app_js
+    assert 'const noInicio = atual.id === "inicio"' in app_js

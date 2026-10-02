@@ -17,13 +17,14 @@
   --font: "Inter", system-ui, sans-serif;
   --mono: "Fira Code", monospace;
   --radius: 14px;
+  --altura-topo: 110px; /* nome + menu; o topo fica fixo em cima */
   /* As mesmas curvas do portfólio */
   --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
   --ease-texto: cubic-bezier(0, -0.02, 0.49, 0.99);
 }
 
 html {
-  scroll-padding-top: 130px; /* o topo fica fixo; a rolagem para logo abaixo dele */
+  scroll-padding-top: calc(var(--altura-topo) + 20px); /* o topo fica fixo; a rolagem para logo abaixo dele */
 }
 
 *,
@@ -1137,11 +1138,11 @@ body {
 
 /* ---------- Início (lobby) ---------- */
 
-/* Ocupa a altura da janela, menos o topo (que tem uns 110px) */
+/* Ocupa a altura da janela, menos o topo */
 .lobby {
   display: grid;
   place-items: center;
-  min-height: calc(100svh - 110px);
+  min-height: calc(100svh - var(--altura-topo));
   padding-block: 40px 56px;
 }
 
