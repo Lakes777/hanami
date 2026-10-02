@@ -100,7 +100,7 @@ pip install -r requirements-dev.txt
 pytest
 ```
 
-São 193 testes cobrindo as validações, o banco de dados, as rotas, o catálogo, as temporadas, os comentários, o backup e os arquivos do front. **Nenhum teste acessa a internet nem a sua lista real:**
+São 197 testes cobrindo as validações, o banco de dados, as rotas, o catálogo, as temporadas, os comentários, o backup e os arquivos do front. **Nenhum teste acessa a internet nem a sua lista real:**
 
 - Cada teste usa um banco novo numa pasta temporária (`tmp_path`).
 - A Jikan é substituída por uma imitação (`httpx.MockTransport`) que responde com respostas reais gravadas em `tests/dados/` (Frieren e as duas primeiras temporadas de Attack on Titan). Se o código tentar uma consulta que o teste não previu, o teste falha.

@@ -315,6 +315,7 @@ function abrirTemporadas(anime, nome) {
 function criarCartaoAnime(anime, franquia = null) {
   const cartao = $("#molde-anime").content.firstElementChild.cloneNode(true);
   cartao.dataset.id = anime.id;
+  cartao.dataset.franquia = anime.franquia;
   preencherCapa(cartao, anime, () => abrirDetalhes(anime));
   const titulo = cartao.querySelector(".cartao__titulo");
   titulo.textContent = anime.titulo;
@@ -415,7 +416,7 @@ function criarCartaoFranquia(temporadas, visiveis, anime = temporadaInicial(visi
   grupo.setAttribute("aria-label",
     `${nome}: ${temporadas.length} ${soTemporadas ? "temporadas" : "itens"} na lista`);
   for (const temporada of visiveis) {
-    const rotulo = estado.rotulos.get(temporada.id);
+    const rotulo = estado.rotulos.get(temporada.id) ?? temporada.titulo;
     const botao = document.createElement("button");
     botao.type = "button";
     botao.className = "temporada-botao";
@@ -457,6 +458,15 @@ function abrirEdicao(anime) {
   $("#dialogo-editar").showModal();
 }
 
+// O que mandar no PATCH depois da janela Editar: só o que mudou.
+// Os episódios ajustam o status sozinhos; se a pessoa escolheu outro status, vale a escolha dela.
+function mudancasDaEdicao(anime, { vistos, status, nota }) {
+  const mudancas = vistos !== anime.episodios_vistos ? mudancasPorEpisodios(anime, vistos) : {};
+  if (status !== anime.status) mudancas.status = status;
+  if (nota !== anime.nota) mudancas.nota = nota;
+  return mudancas;
+}
+
 async function salvarEdicao(evento) {
   evento.preventDefault();
   const anime = estado.animeEditado;
@@ -467,14 +477,50 @@ async function salvarEdicao(evento) {
       ? "Digite um número inteiro de episódios."
       : `Digite um número de 0 a ${total}.`, true);
   }
-  // Os episódios ajustam o status sozinhos; se a pessoa escolheu outro status, vale a escolha dela.
-  const mudancas = vistos !== anime.episodios_vistos ? mudancasPorEpisodios(anime, vistos) : {};
-  const status = $("#editar-status").value;
-  if (status !== anime.status) mudancas.status = status;
-  const nota = $("#editar-nota").value ? Number($("#editar-nota").value) : null;
-  if (nota !== anime.nota) mudancas.nota = nota;
+  const mudancas = mudancasDaEdicao(anime, {
+    vistos,
+    status: $("#editar-status").value,
+    nota: $("#editar-nota").value ? Number($("#editar-nota").value) : null,
+  });
   $("#dialogo-editar").close();
   if (Object.keys(mudancas).length) await editar(anime.id, mudancas);
+}
+
+// ---------- Foco do teclado ao redesenhar a lista ----------
+
+function lembrarFoco() {
+  const focado = document.activeElement;
+  const cartao = focado?.closest?.("#lista .cartao");
+  if (!cartao) return null;
+  const { acao, campo, temporada } = focado.dataset;
+  return {
+    id: cartao.dataset.id,
+    franquia: cartao.dataset.franquia,
+    indice: [...$("#lista").children].indexOf(cartao),
+    seletor: acao ? `[data-acao="${acao}"]`
+      : campo ? `[data-campo="${campo}"]`
+      : temporada ? `[data-temporada="${temporada}"]` : null,
+  };
+}
+
+// Volta ao mesmo botão. Se ele sumiu ou ficou desativado (o anime acabou, a franquia passou
+// para a próxima temporada), vai para o Editar do mesmo cartão. Se o cartão saiu da lista
+// (ex.: filtro "Assistindo" e o anime foi concluído), vai para o cartão que ficou no lugar dele
+// ou, com a lista vazia, para o título da lista. Nunca deixa o foco cair no <body>.
+function devolverFoco(foco) {
+  if (!foco) return;
+  const usavel = (elemento) => (elemento && !elemento.disabled && !elemento.hidden ? elemento : null);
+  const cartoes = $("#lista").children;
+  const mesmo = $(`#lista .cartao[data-id="${foco.id}"]`);
+  // A franquia passou a mostrar outra temporada: vai para o Editar (e não para o +1 ep. da
+  // outra temporada, para um Enter repetido não marcar episódio no anime errado).
+  const daFranquia = !mesmo && $(`#lista .cartao[data-franquia="${foco.franquia}"]`);
+  const alvo = mesmo
+    ? usavel(foco.seletor && mesmo.querySelector(foco.seletor)) ?? mesmo.querySelector('[data-acao="editar"]')
+    : daFranquia?.querySelector('[data-acao="editar"]')
+      ?? cartoes[Math.min(foco.indice, cartoes.length - 1)]?.querySelector('[data-acao="editar"]')
+      ?? $("#titulo-lista");
+  alvo.focus();
 }
 
 async function carregarLista() {
@@ -491,23 +537,21 @@ async function carregarLista() {
       visiveis.push(animes[i + visiveis.length]);
     }
     i += visiveis.length;
-    grupos.push({ visiveis, temporadas: estado.franquias.get(visiveis[0].franquia) ?? visiveis });
+    // A lista filtrada e o mapa das franquias vêm de pedidos separados e podem divergir
+    // (alguém mudou a lista no meio). Se o mapa não tiver todas as visíveis, valem as visíveis.
+    const daFranquia = estado.franquias.get(visiveis[0].franquia) ?? [];
+    const completa = visiveis.every((v) => daFranquia.some((t) => t.id === v.id));
+    grupos.push({ visiveis, temporadas: completa ? daFranquia : visiveis });
   }
   const elementos = ordenarGrupos(grupos).map(({ visiveis, temporadas }) =>
-    temporadas.length > 1 ? criarCartaoFranquia(temporadas, visiveis) : criarCartaoAnime(visiveis[0]),
+    visiveis.length > 1 || temporadas.length > 1
+      ? criarCartaoFranquia(temporadas, visiveis)
+      : criarCartaoAnime(visiveis[0]),
   );
   // Os cartões são recriados: quem estava com o foco num botão (ex.: +1 ep.) volta para ele.
-  const focado = document.activeElement?.closest?.("#lista [data-id]") && document.activeElement;
-  const voltar = focado && {
-    id: focado.closest("[data-id]").dataset.id,
-    seletor: focado.dataset.acao ? `[data-acao="${focado.dataset.acao}"]`
-      : focado.dataset.campo ? `[data-campo="${focado.dataset.campo}"]` : null,
-  };
+  const foco = lembrarFoco();
   $("#lista").replaceChildren(...elementos);
-  if (voltar?.seletor) {
-    const alvo = $(`#lista [data-id="${voltar.id}"] ${voltar.seletor}`);
-    if (alvo && !alvo.disabled) alvo.focus();
-  }
+  devolverFoco(foco);
 
   let aviso = "";
   if (animes.length === 0) {
