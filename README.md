@@ -9,7 +9,7 @@ API REST em Python com **FastAPI** para organizar sua lista de animes: o que voc
 > Versão de demonstração no plano gratuito do Render: qualquer pessoa pode testar, e a lista volta ao exemplo quando o servidor reinicia. Depois de 15 minutos sem visitas o servidor dorme, e a primeira visita pode levar cerca de 1 minuto para carregar.
 
 <p align="center">
-  <img src="docs/demo.gif" alt="Demonstração: digitando o episódio do Frieren, escrevendo um comentário sobre o episódio 10, abrindo Outras temporadas e adicionando a 2ª temporada, que aparece junto da 1ª no quadro da franquia, e filtrando pela aba Quero ver" width="800">
+  <img src="docs/demo.gif" alt="Demonstração: no Frieren, digitando o episódio exato pelo ícone de editar e somando +1 ep., escrevendo um comentário sobre o episódio 10, abrindo Outras temporadas e adicionando a 2ª temporada, que entra no mesmo cartão com os botões T1 e T2, filtrando pela aba Quero ver e buscando Cowboy Bebop na aba Adicionar" width="800">
 </p>
 
 ## Funcionalidades
