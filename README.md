@@ -9,7 +9,11 @@
 > Versão de demonstração no plano gratuito do Render: qualquer pessoa pode testar, e a lista volta ao exemplo quando o servidor reinicia. Depois de 15 minutos sem visitas o servidor dorme, e a primeira visita pode levar cerca de 1 minuto para carregar.
 
 <p align="center">
-  <img src="docs/demo.gif" alt="Demonstração: no Frieren, digitando o episódio exato pelo ícone de editar e somando +1 ep., escrevendo um comentário sobre o episódio 10, abrindo Outras temporadas e adicionando a 2ª temporada, que entra no mesmo cartão com os botões T1 e T2, filtrando pela aba Quero ver e buscando Cowboy Bebop na aba Adicionar" width="800">
+  <img src="docs/lobby.png" alt="Página inicial do Hanami: o nome em destaque, a frase sobre o projeto, o resumo da lista, três destaques (busca no MyAnimeList, temporadas juntas e comentários por episódio) e o botão Começar, com pranchas desenhadas de mangá, TV, sakura e torii passando ao fundo" width="800">
+</p>
+
+<p align="center">
+  <img src="docs/demo.gif" alt="Demonstração: a página inicial com as pranchas passando ao fundo e o botão Começar; na Minha lista, no Frieren, digitando o episódio exato pelo ícone de editar e somando +1 ep., escrevendo um comentário sobre o episódio 10, trocando entre os botões T1 e T2 no cartão de Shingeki no Kyojin, que junta as duas temporadas, filtrando pela aba Quero ver e buscando Cowboy Bebop na aba Adicionar" width="800">
 </p>
 
 ## Funcionalidades
@@ -29,7 +33,7 @@
 - **Funciona no celular:** o layout se adapta a telas pequenas.
 
 <p align="center">
-  <img src="docs/celular.jpg" alt="Hanami numa tela de celular: as abas Minha lista e Adicionar, as estatísticas, os filtros de status e os cartões com capa, status, episódios, o botão +1 ep. e os ícones de comentar, editar, temporadas e remover" width="260">
+  <img src="docs/celular.jpg" alt="Hanami numa tela de celular: o menu com Início, Minha lista e Adicionar, as estatísticas, os filtros de status e os cartões com capa, status, episódios, o botão +1 ep. e os ícones de comentar, editar, temporadas e remover" width="260">
 </p>
 
 ## Rotas da API
