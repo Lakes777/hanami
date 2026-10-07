@@ -69,7 +69,7 @@ def test_inicio_tem_nome_destaques_e_botoes(pagina):
     no_inicio = [(t, a) for t, a, onde in pagina if onde == "inicio"]
     links = {a.get("href"): a for t, a in no_inicio if t == "a"}
     assert "botao--vivo" in links["#minha-lista"]["class"]  # Começar
-    github = links["https://github.com/Lakes777/lista-animes"]
+    github = links["https://github.com/Lakes777/hanami"]
     assert github["rel"] == "noopener"
     destaques = [a for t, a in no_inicio if t == "li" and "destaque" in a.get("class", "").split()]
     # Saltam e brilham com o mouse, como os cartões da lista

@@ -1,6 +1,6 @@
 # Hanami
 
-[![Testes](https://github.com/Lakes777/lista-animes/actions/workflows/testes.yml/badge.svg)](https://github.com/Lakes777/lista-animes/actions/workflows/testes.yml)
+[![Testes](https://github.com/Lakes777/hanami/actions/workflows/testes.yml/badge.svg)](https://github.com/Lakes777/hanami/actions/workflows/testes.yml)
 
 **Hanami · lista de animes.** API REST em Python com **FastAPI** para organizar sua lista de animes: o que você quer ver, o que está vendo e o que já viu. Os dados dos animes (título, episódios e capa) vêm da [Jikan](https://jikan.moe), uma API gratuita com o catálogo do **MyAnimeList**. A própria API também entrega um front em HTML, CSS e JavaScript puros.
 
@@ -64,8 +64,8 @@ As respostas usam os códigos HTTP certos para cada caso: **201** (criado), **20
 Requer **Python 3.10+**.
 
 ```bash
-git clone https://github.com/Lakes777/lista-animes.git
-cd lista-animes
+git clone https://github.com/Lakes777/hanami.git
+cd hanami
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
