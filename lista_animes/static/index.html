@@ -6,7 +6,7 @@
   <title>Hanami</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Shippori+Mincho:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
   <link rel="stylesheet" href="/static/estilo.css">
   <script src="/static/app.js" defer></script>
@@ -37,44 +37,40 @@
       <a href="https://github.com/Lakes777/hanami" target="_blank" rel="noopener">Ver o código no GitHub</a>
     </p>
 
-    <!-- Início (lobby): o que é o projeto e por onde começar. O fundo com as pranchas
-         só existe aqui; o app.js repete cada faixa uma vez para o loop não ter emenda. -->
+    <!-- Início (lobby): o que é o projeto e por onde começar. O fundo é uma noite de
+         hanami: céu índigo, lua cheia, um galho de cerejeira balançando e pétalas caindo.
+         Só existe aqui; é enfeite (aria-hidden) e para com "menos animação". -->
     <section class="aba-tela lobby" id="inicio" aria-labelledby="titulo-inicio">
       <div class="lobby__fundo" aria-hidden="true">
-        <div class="faixa faixa--1">
-          <div class="faixa__trilho">
-          <img src="/static/pranchas/manga.svg" alt="" width="520" height="300" decoding="async">
-          <img src="/static/pranchas/tv.svg" alt="" width="520" height="300" decoding="async">
-          <img src="/static/pranchas/sakura.svg" alt="" width="520" height="300" decoding="async">
-          <img src="/static/pranchas/torii.svg" alt="" width="520" height="300" decoding="async">
-          <img src="/static/pranchas/ficha.svg" alt="" width="520" height="300" decoding="async">
-          <img src="/static/pranchas/pelicula.svg" alt="" width="520" height="300" decoding="async">
-          </div>
-        </div>
-        <div class="faixa faixa--2">
-          <div class="faixa__trilho">
-          <img src="/static/pranchas/sakura.svg" alt="" width="520" height="300" decoding="async">
-          <img src="/static/pranchas/pelicula.svg" alt="" width="520" height="300" decoding="async">
-          <img src="/static/pranchas/manga.svg" alt="" width="520" height="300" decoding="async">
-          <img src="/static/pranchas/ficha.svg" alt="" width="520" height="300" decoding="async">
-          <img src="/static/pranchas/torii.svg" alt="" width="520" height="300" decoding="async">
-          <img src="/static/pranchas/tv.svg" alt="" width="520" height="300" decoding="async">
-          </div>
-        </div>
-        <div class="faixa faixa--3">
-          <div class="faixa__trilho">
-          <img src="/static/pranchas/torii.svg" alt="" width="520" height="300" decoding="async">
-          <img src="/static/pranchas/ficha.svg" alt="" width="520" height="300" decoding="async">
-          <img src="/static/pranchas/tv.svg" alt="" width="520" height="300" decoding="async">
-          <img src="/static/pranchas/pelicula.svg" alt="" width="520" height="300" decoding="async">
-          <img src="/static/pranchas/sakura.svg" alt="" width="520" height="300" decoding="async">
-          <img src="/static/pranchas/manga.svg" alt="" width="520" height="300" decoding="async">
-          </div>
-        </div>
+        <div class="lobby__lua"></div>
+        <svg class="lobby__galho" viewBox="0 0 720 300" fill="none">
+          <path d="M720 30C600 40 520 70 430 120 360 160 300 170 230 168M520 72C500 110 480 140 470 190M430 120C420 90 400 70 380 58M300 170C280 200 270 230 262 262"
+                stroke="#2b2033" stroke-width="9" stroke-linecap="round"/>
+          <g fill="#f2a7c3">
+            <circle cx="232" cy="166" r="11"/><circle cx="250" cy="152" r="9"/><circle cx="216" cy="180" r="8"/>
+            <circle cx="262" cy="262" r="10"/><circle cx="276" cy="248" r="8"/><circle cx="380" cy="58" r="10"/>
+            <circle cx="396" cy="46" r="8"/><circle cx="470" cy="190" r="11"/><circle cx="486" cy="176" r="8"/>
+            <circle cx="455" cy="205" r="7"/><circle cx="330" cy="160" r="9"/><circle cx="560" cy="60" r="10"/>
+            <circle cx="620" cy="44" r="8"/><circle cx="520" cy="96" r="7"/>
+          </g>
+          <g fill="#c46a8f">
+            <circle cx="240" cy="172" r="4"/><circle cx="388" cy="54" r="4"/><circle cx="476" cy="186" r="4"/>
+            <circle cx="266" cy="256" r="4"/><circle cx="566" cy="58" r="3"/>
+          </g>
+        </svg>
+        <!-- Pétalas: cada uma cai num ritmo e num lugar (variáveis --x, --t e --d) -->
+        <i class="petala" style="--x: 58%; --t: 11s; --d: 0s"></i>
+        <i class="petala" style="--x: 74%; --t: 14s; --d: 2s"></i>
+        <i class="petala" style="--x: 48%; --t: 12s; --d: 5s"></i>
+        <i class="petala" style="--x: 86%; --t: 16s; --d: 1s"></i>
+        <i class="petala" style="--x: 66%; --t: 13s; --d: 7s"></i>
+        <i class="petala" style="--x: 94%; --t: 15s; --d: 4s"></i>
+        <i class="petala" style="--x: 80%; --t: 17s; --d: 9s"></i>
+        <i class="petala" style="--x: 40%; --t: 18s; --d: 11s"></i>
       </div>
 
       <div class="lobby__conteudo">
-        <p class="lobby__chamada reveal" data-grupo="0">Lista de animes · FastAPI + JavaScript</p>
+        <p class="lobby__chamada reveal" data-grupo="0"><span class="lobby__kanji" aria-hidden="true">花 見</span>Lista de animes · FastAPI + JavaScript</p>
         <h1 class="lobby__nome aba-tela__titulo reveal" id="titulo-inicio" tabindex="-1" data-grupo="0">Hanami</h1>
         <p class="lobby__frase reveal" data-grupo="1">
           Organize o que você assiste: busque no MyAnimeList, marque os episódios vistos,

@@ -9,11 +9,11 @@
 > Versão de demonstração no plano gratuito do Render: qualquer pessoa pode testar, e a lista volta ao exemplo quando o servidor reinicia. Depois de 15 minutos sem visitas o servidor dorme, e a primeira visita pode levar cerca de 1 minuto para carregar.
 
 <p align="center">
-  <img src="docs/lobby.png" alt="Página inicial do Hanami: o nome em destaque, a frase sobre o projeto, o resumo da lista, três destaques (busca no MyAnimeList, temporadas juntas e comentários por episódio) e o botão Começar, com pranchas desenhadas de mangá, TV, sakura e torii passando ao fundo" width="800">
+  <img src="docs/lobby.png" alt="Página inicial do Hanami: o nome em destaque, a frase sobre o projeto, o resumo da lista, três destaques (busca no MyAnimeList, temporadas juntas e comentários por episódio) e o botão Começar, num céu de noite de hanami, com lua cheia, um galho de cerejeira e pétalas caindo" width="800">
 </p>
 
 <p align="center">
-  <img src="docs/demo.gif" alt="Demonstração: a página inicial com as pranchas passando ao fundo e o botão Começar; na Minha lista, no Frieren, digitando o episódio exato pelo ícone de editar e somando +1 ep., escrevendo um comentário sobre o episódio 10, trocando entre os botões T1 e T2 no cartão de Shingeki no Kyojin, que junta as duas temporadas, filtrando pela aba Quero ver e buscando Cowboy Bebop na aba Adicionar" width="800">
+  <img src="docs/demo.gif" alt="Demonstração: a página inicial com o céu de hanami (lua, galho de cerejeira e pétalas caindo) e o botão Começar; na Minha lista, no Frieren, digitando o episódio exato pelo ícone de editar e somando +1 ep., escrevendo um comentário sobre o episódio 10, trocando entre os botões T1 e T2 no cartão de Shingeki no Kyojin, que junta as duas temporadas, filtrando pela aba Quero ver e buscando Cowboy Bebop na aba Adicionar" width="800">
 </p>
 
 ## Funcionalidades
@@ -24,7 +24,7 @@
 - **Escolher o episódio:** clique em **+1 ep.** ou, no ícone de editar, digite o número exato (e mude a nota e o status). Ao começar, o anime passa para "assistindo". No último episódio, vira "concluído".
 - **Temporadas juntas:** no MyAnimeList, cada temporada é um anime separado. Ao adicionar, a API vê na Jikan qual é a temporada anterior e a seguinte, e as temporadas da mesma franquia ficam num cartão só, com botões sobre a capa para trocar entre elas ("T1", "T2", "Filme"...). Assim a grade não quebra. O ícone de **outras temporadas** mostra as que faltam e adiciona com um clique.
 - **Comentários:** cada anime tem um histórico de anotações com data, e cada uma pode dizer o episódio ("ep. 7: que luta!").
-- **Início e duas abas:** uma página inicial com o resumo do projeto e, ao fundo, pranchas desenhadas (mangá, TV, sakura, torii) passando devagar; depois **Minha lista** e **Adicionar**, cada uma com endereço próprio (`/#adicionar`), com as mesmas animações do [portfólio](https://lakes777.github.io).
+- **Início e duas abas:** uma página inicial com o resumo do projeto numa noite de hanami (identidade "Yozakura": céu índigo, lua cheia, galho de cerejeira balançando e pétalas caindo, títulos em Shippori Mincho); depois **Minha lista** e **Adicionar**, cada uma com endereço próprio (`/#adicionar`), com as mesmas animações do [portfólio](https://lakes777.github.io).
 - **Filtros e ordem:** abas por status, busca por parte do título e ordem (adicionados por último ou primeiro, título ou maior nota), sem separar as temporadas da mesma franquia. A ordem escolhida fica guardada no navegador.
 - **Sinopse e gêneros:** clicar na capa mostra a sinopse, os gêneros e a nota do MyAnimeList, com link para a página do anime.
 - **Backup:** na aba **Adicionar**, baixe a lista inteira num arquivo JSON (com comentários e temporadas) e importe de volta, aqui ou em outro computador. Ao importar, nada duplica: os animes que já estão na lista ficam como estão, e se algo der errado nada é importado.

@@ -1,16 +1,13 @@
-"""Confere o início (lobby): a seção, as pranchas do fundo e a rota pelo hash.
+"""Confere o início (lobby): a seção, o céu do fundo e a rota pelo hash.
 
-O movimento das faixas é conferido à mão com os prints; aqui ficam a marcação servida
-pela API, os SVGs e as regras do CSS que o movimento depende.
+O movimento (galho e pétalas) é conferido à mão com os prints; aqui ficam a marcação
+servida pela API e as regras do CSS de que o movimento depende.
 """
 
 import re
 from html.parser import HTMLParser
 
 import pytest
-
-PRANCHAS = ["manga", "tv", "sakura", "torii", "ficha", "pelicula"]
-
 
 class Telas(HTMLParser):
     """Guarda as tags abertas, anotando em qual tela (section.aba-tela) cada uma está."""
@@ -84,38 +81,26 @@ def test_menu_e_nome_do_topo_levam_ao_inicio(pagina):
     assert topo["href"] == "#inicio"
 
 
-def test_pranchas_do_fundo_sao_decorativas(pagina):
+def test_ceu_do_fundo_e_decorativo(pagina, cliente):
     fundo = next(a for t, a, _ in pagina if a.get("class") == "lobby__fundo")
     assert fundo["aria-hidden"] == "true"
-    imagens = [a for t, a, onde in pagina if t == "img" and "/pranchas/" in a.get("src", "")]
-    # 3 faixas com as 6 pranchas cada; o app.js repete o conjunto conforme a largura da tela
-    assert len(imagens) == 18
-    assert all(a["alt"] == "" for a in imagens)
-    assert {a["src"].rsplit("/", 1)[1] for a in imagens} == {f"{n}.svg" for n in PRANCHAS}
+    petalas = [a for t, a, onde in pagina if t == "i" and a.get("class") == "petala"]
+    assert len(petalas) == 8
+    # Cada pétala cai num lugar e num ritmo próprios
+    assert len({a["style"] for a in petalas}) == 8
+    # As pranchas das faixas antigas saíram
+    assert not [a for t, a, _ in pagina if t == "img" and "/pranchas/" in a.get("src", "")]
+    assert cliente.get("/static/pranchas/sakura.svg").status_code == 404
 
 
-@pytest.mark.parametrize("nome", PRANCHAS)
-def test_pranchas_sao_servidas_como_svg_leve(cliente, nome):
-    resposta = cliente.get(f"/static/pranchas/{nome}.svg")
-    assert resposta.status_code == 200
-    assert resposta.headers["content-type"].startswith("image/svg+xml")
-    svg = resposta.text
-    assert 'viewBox="0 0 520 300"' in svg
-    assert 'fill="none"' in svg and "stroke=" in svg  # desenho de linha, sem preenchimento
-    assert len(resposta.content) < 4000
-    # Nada de script, imagem embutida ou arquivo de fora dentro do desenho
-    assert not re.search(r"<script|<image|<foreignObject|https?://(?!www\.w3\.org)", svg)
-
-
-def test_faixas_andam_so_com_transform(estilo):
-    deslizar = re.search(r"@keyframes deslizar \{(.*?)\n\}", estilo, re.S).group(1)
-    assert "translate3d(-50%, 0, 0)" in deslizar
-    assert "opacity" not in deslizar
-    trilho = re.search(r"\.faixa__trilho \{(.*?)\}", estilo, re.S).group(1)
-    assert "will-change: transform" in trilho
-    for duracao in ["64s", "78s", "96s"]:
-        assert duracao in estilo
-    assert "animation-direction: reverse" in estilo
+def test_galho_e_petalas_andam_so_com_transform_e_opacidade(estilo):
+    cair = re.search(r"@keyframes cair \{(.*?)\n\}", estilo, re.S).group(1)
+    assert "translate3d" in cair
+    for propriedade in re.findall(r"([a-z-]+):", cair):
+        assert propriedade in {"transform", "opacity"}, propriedade
+    balancar = re.search(r"@keyframes balancar \{(.*?)\n\}", estilo, re.S).group(1)
+    assert "rotate(" in balancar
+    assert ".pagina-escondida .petala" in estilo
 
 
 def bloco_de_menos_movimento(estilo):
@@ -124,13 +109,13 @@ def bloco_de_menos_movimento(estilo):
     return estilo[inicio : estilo.index("\n}", inicio)]
 
 
-def test_faixas_param_com_menos_animacao(estilo):
-    """A regra geral de menos movimento desliga toda animação (inclusive as faixas)."""
+def test_ceu_para_com_menos_animacao(estilo):
+    """A regra geral de menos movimento desliga toda animação (inclusive galho e pétalas)."""
     bloco = bloco_de_menos_movimento(estilo)
     assert "animation: none !important" in bloco
-    # E nenhuma regra das faixas, dentro do bloco, religa a animação
+    # E nenhuma regra do céu, dentro do bloco, religa a animação
     for seletor, regra in re.findall(r"([^{}]+)\{([^{}]*)\}", bloco):
-        if "faixa" in seletor:
+        if "petala" in seletor or "galho" in seletor:
             assert "animation" not in regra, seletor
 
 
@@ -145,24 +130,13 @@ def test_lobby_desconta_a_altura_do_topo(estilo):
 def test_fundo_nao_cria_rolagem_de_lado(estilo):
     fundo = re.search(r"\.lobby__fundo \{(.*?)\}", estilo, re.S).group(1)
     assert "position: fixed" in fundo and "overflow: hidden" in fundo
-    assert re.search(r"\.faixa \{[^}]*overflow: hidden", estilo)
 
 
-def test_app_js_repete_as_faixas_e_trata_o_inicio(app_js):
+def test_app_js_prepara_o_inicio_sem_copiar_desenhos(app_js):
     preparar = re.search(r"function prepararInicio\(.*?\n}", app_js, re.S).group()
-    assert "cloneNode()" in preparar
+    assert "cloneNode" not in preparar and "trilho" not in preparar
+    assert 'classList.toggle("pagina-escondida", document.hidden)' in preparar
     assert 'atual.id === "inicio"' in app_js
-
-
-def test_faixas_cobrem_telas_largas(app_js):
-    """Cada metade do trilho tem que passar da largura da tela, senão abre um vão no loop:
-    o conjunto se repete conforme a tela e só depois a metade é duplicada (-50% exato)."""
-    preparar = re.search(r"function prepararInicio\(.*?\n}", app_js, re.S).group()
-    assert "Math.max(screen.width, window.innerWidth)" in preparar
-    assert "Math.ceil(largura / 2200)" in preparar
-    repetir = preparar.index("i < repeticoes")
-    duplicar = preparar.index("for (const prancha of [...trilho.children]) trilho.append")
-    assert repetir < duplicar
 
 
 def test_numeros_do_inicio(app_js, pagina):

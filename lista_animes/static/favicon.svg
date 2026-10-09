@@ -1,8 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
-  <!-- Televisão do Lucide (tv, licença ISC) em grafite sobre o azul de destaque, o mesmo ícone do card no portfólio. -->
-  <rect width="32" height="32" rx="7" fill="#4fc3f7"/>
-  <g transform="translate(4 4)" fill="none" stroke="#0d0e10" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="m17 2-5 5-5-5"/>
-    <rect width="20" height="15" x="2" y="7" rx="2"/>
+  <!-- Flor de cerejeira (5 pétalas) em rosa-sakura sobre o céu índigo do projeto. -->
+  <rect width="32" height="32" rx="7" fill="#100f1c"/>
+  <g fill="#f2a7c3">
+    <ellipse cx="16.00" cy="9.80" rx="4.6" ry="6" transform="rotate(0 16.00 9.80)"/>
+    <ellipse cx="21.90" cy="14.08" rx="4.6" ry="6" transform="rotate(72 21.90 14.08)"/>
+    <ellipse cx="19.64" cy="21.02" rx="4.6" ry="6" transform="rotate(144 19.64 21.02)"/>
+    <ellipse cx="12.36" cy="21.02" rx="4.6" ry="6" transform="rotate(216 12.36 21.02)"/>
+    <ellipse cx="10.10" cy="14.08" rx="4.6" ry="6" transform="rotate(288 10.10 14.08)"/>
   </g>
+  <circle cx="16" cy="16" r="2.6" fill="#c46a8f"/>
 </svg>
