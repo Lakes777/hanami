@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/demo.gif" alt="Demonstração: a página inicial com o céu de hanami (lua, galho de cerejeira e pétalas caindo) e o botão Começar; na Minha lista, no Frieren, digitando o episódio exato pelo ícone de editar e somando +1 ep., escrevendo um comentário sobre o episódio 10, trocando entre os botões T1 e T2 no cartão de Shingeki no Kyojin, que junta as duas temporadas, filtrando pela aba Quero ver e buscando Cowboy Bebop na aba Adicionar" width="800">
+  <img src="docs/demo.gif" alt="Demonstração: a página inicial com o céu de hanami (lua, galho de cerejeira e pétalas caindo) e o botão Começar; na Minha lista, no Frieren, somando +1 ep. duas vezes e escrevendo um comentário sobre o episódio 20; no cartão de Shingeki no Kyojin, que junta as temporadas, trocando para a T2; filtrando pela aba Quero ver e abrindo a aba Adicionar" width="800">
 </p>
 
 ## Funcionalidades
